@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garhi Ahbaran Smart Village</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="splash-screen" class="glass-panel">
+        <span class="material-icons splash-icon">grass</span>
+        <h1>Garhi Ahbaran</h1>
+        <p>Smart Village Platform</p>
+        <div class="loader"></div>
+    </div>
+
+    <div id="login-section" class="hidden">
+        <div class="glass-panel login-card">
+            <span class="material-icons login-icon">account_circle</span>
+            <h2>Welcome to Garhi Ahbaran</h2>
+            <p>Please login to continue</p>
+            <button id="btn-google-login" class="btn btn-primary">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" class="google-logo">
+                Login with Google
+            </button>
+            <button id="btn-guest-login" class="btn btn-secondary">Continue as Guest</button>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        <nav class="sidebar glass-panel">
+            <div class="user-profile">
+                <img id="user-avatar" src="https://via.placeholder.com/50" alt="Profile">
+                <div>
+                    <h3 id="user-name">Guest User</h3>
+                    <p id="user-email" class="text-sm">guest@garhi.village</p>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li data-target="dashboard" class="active"><span class="material-icons">home</span> Dashboard</li>
+                <li data-target="news"><span class="material-icons">article</span> Village News</li>
+                <li data-target="chat"><span class="material-icons">forum</span> Live Chat</li>
+                <li data-target="directory"><span class="material-icons">contacts</span> Directory</li>
+                <li data-target="complaints"><span class="material-icons">report_problem</span> Complaints</li>
+                <li data-target="schemes"><span class="material-icons">account_balance</span> Gov Schemes</li>
+                <li data-target="wifi"><span class="material-icons">wifi</span> Free WiFi</li>
+                <li data-target="water"><span class="material-icons">water_drop</span> RO Water Plant</li>
+                <li data-target="transport"><span class="material-icons">directions_bus</span> Transport</li>
+                <li data-target="help"><span class="material-icons">help_center</span> Help Center</li>
+                <li data-target="admin" id="nav-admin" class="hidden"><span class="material-icons">admin_panel_settings</span> Admin Panel</li>
+            </ul>
+            <button id="btn-logout" class="btn btn-danger"><span class="material-icons">logout</span> Logout</button>
+        </nav>
+
+        <main class="content-area">
+            <header class="mobile-header glass-panel">
+                <span class="material-icons" id="menu-toggle">menu</span>
+                <h2>Garhi Ahbaran</h2>
+                <a href="https://wa.me/910000000000" target="_blank" class="whatsapp-btn"><span class="material-icons">chat</span></a>
+            </header>
+
+            <section id="dashboard" class="page active">
+                <div class="banner glass-panel">
+                    <h1>Garhi Ahbaran Smart Village</h1>
+                    <p>Connecting our community digitally for a better tomorrow.</p>
+                </div>
+                <div class="grid-cards">
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'news\']').click()">
+                        <span class="material-icons">article</span>
+                        <h3>Latest News</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'chat\']').click()">
+                        <span class="material-icons">forum</span>
+                        <h3>Live Chat</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'directory\']').click()">
+                        <span class="material-icons">contacts</span>
+                        <h3>Directory</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'schemes\']').click()">
+                        <span class="material-icons">account_balance</span>
+                        <h3>Gov Schemes</h3>
+                    </div>
+                </div>
+            </section>
+
+            <section id="news" class="page hidden">
+                <h2>Village News</h2>
+                <div id="news-container" class="list-container"></div>
+            </section>
+
+            <section id="chat" class="page hidden chat-layout">
+                <h2>Village Live Chat</h2>
+                <div id="chat-box" class="glass-panel"></div>
+                <form id="chat-form" class="glass-panel">
+                    <input type="text" id="chat-input" placeholder="Type a message... 😄" required autocomplete="off">
+                    <button type="submit" class="btn btn-primary"><span class="material-icons">send</span></button>
+                </form>
+            </section>
+
+            <section id="directory" class="page hidden">
+                <h2>Village Directory</h2>
+                <div class="glass-panel search-box">
+                    <input type="text" id="dir-search" placeholder="Search family or mobile...">
+                </div>
+                <form id="dir-form" class="glass-panel form-layout">
+                    <h3>Add Directory Entry</h3>
+                    <input type="text" id="dir-name" placeholder="Family Head Name" required>
+                    <input type="tel" id="dir-mobile" placeholder="Mobile Number" required>
+                    <input type="number" id="dir-members" placeholder="Number of Members" required>
+                    <input type="text" id="dir-address" placeholder="Address/House No." required>
+                    <button type="submit" class="btn btn-primary">Add Entry</button>
+                </form>
+                <div id="dir-container" class="list-container"></div>
+            </section>
+
+            <section id="complaints" class="page hidden">
+                <h2>Submit a Complaint</h2>
+                <form id="complaint-form" class="glass-panel form-layout">
+                    <select id="comp-type" required>
+                        <option value="">Select Category</option>
+                        <option value="Water">Water Supply</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Roads">Roads & Cleanliness</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <textarea id="comp-desc" placeholder="Describe your issue..." required></textarea>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+                <div id="user-complaints-container" class="list-container"></div>
+            </section>
+
+            <section id="schemes" class="page hidden">
+                <h2>Government Schemes</h2>
+                <div class="grid-cards">
+                    <div class="card glass-panel">
+                        <h3>PM Awas Yojana</h3>
+                        <p>Housing for all. Check eligibility and apply.</p>
+                    </div>
+                    <div class="card glass-panel">
+                        <h3>Village Pension</h3>
+                        <p>Old age, widow, and disability pension details.</p>
+                    </div>
+                    <div class="card glass-panel">
+                        <h3>Ayushman Bharat</h3>
+                        <p>Health insurance coverage up to ₹5 Lakhs.</p>
+                    </div>
+                    <div class="card glass-panel">
+                        <h3>Ration Card</h3>
+                        <p>Updates on free ration distribution dates.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="wifi" class="page hidden">
+                <h2>Free Public WiFi</h2>
+                <div class="glass-panel info-card">
+                    <span class="material-icons large-icon">wifi</span>
+                    <h3>Gram Panchayat WiFi</h3>
+                    <p><strong>SSID:</strong> Garhi_Ahbaran_Free</p>
+                    <p><strong>Password:</strong> SmartVillage2026</p>
+                    <p><em>Available near Panchayat Bhawan and Main Square.</em></p>
+                </div>
+            </section>
+
+            <section id="water" class="page hidden">
+                <h2>RO Water Plant</h2>
+                <div class="glass-panel info-card">
+                    <span class="material-icons large-icon">water_drop</span>
+                    <h3>Panchayat RO Plant</h3>
+                    <p><strong>Timings:</strong> 6:00 AM - 10:00 AM | 4:00 PM - 8:00 PM</p>
+                    <p><strong>Cost:</strong> ₹5 per 20 Liters</p>
+                    <p><em>Please bring your own clean containers.</em></p>
+                </div>
+            </section>
+
+            <section id="transport" class="page hidden">
+                <h2>Public Transport</h2>
+                <div class="glass-panel info-card">
+                    <span class="material-icons large-icon">directions_bus</span>
+                    <h3>Village to City Market</h3>
+                    <ul class="text-left">
+                        <li>Departure (Village): 8:00 AM, 11:00 AM, 3:00 PM</li>
+                        <li>Return (City): 10:00 AM, 2:00 PM, 6:00 PM</li>
+                    </ul>
+                    <p><strong>Driver Contact:</strong> +91 98765 43210 (Ramu Driver)</p>
+                </div>
+            </section>
+
+            <section id="help" class="page hidden">
+                <h2>Digital Help Center</h2>
+                <div class="glass-panel info-card">
+                    <span class="material-icons large-icon">support_agent</span>
+                    <h3>Need help using the app?</h3>
+                    <p>Visit the CSC Center near the primary school for assistance with form filling, app usage, and government portals.</p>
+                    <a href="https://wa.me/910000000000" target="_blank" class="btn btn-primary" style="display:inline-block; margin-top:10px;">Chat on WhatsApp</a>
+                </div>
+            </section>
+
+            <section id="admin" class="page hidden">
+                <h2>Admin Panel</h2>
+                <div class="admin-tabs">
+                    <button class="btn btn-secondary active" onclick="showAdminTab('admin-news')">News</button>
+                    <button class="btn btn-secondary" onclick="showAdminTab('admin-complaints')">Complaints</button>
+                </div>
+                
+                <div id="admin-news" class="admin-tab active">
+                    <form id="add-news-form" class="glass-panel form-layout">
+                        <h3>Add Village News</h3>
+                        <input type="text" id="news-title" placeholder="News Title" required>
+                        <textarea id="news-content" placeholder="News Content" required></textarea>
+                        <button type="submit" class="btn btn-primary">Publish</button>
+                    </form>
+                    <div id="admin-news-list" class="list-container"></div>
+                </div>
+
+                <div id="admin-complaints" class="admin-tab hidden">
+                    <div id="admin-complaints-list" class="list-container"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="app.js"></script>
+    <script type="module" src="chat.js"></script>
+    <script type="module" src="admin.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js');
+        }
+        function showAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
