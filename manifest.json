@@ -1,20 +1,20 @@
 {
   "name": "Garhi Ahbaran Smart Village",
   "short_name": "Garhi Ahbaran",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#e8f5e9",
   "theme_color": "#2e7d32",
   "description": "Digital platform for Garhi Ahbaran Village",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Leaf_icon_15.svg/1024px-Leaf_icon_15.svg.png",
-      "sizes": "192x192",
+      "src": "https://cdn-icons-png.flaticon.com/512/606/606552.png",
+      "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Leaf_icon_15.svg/1024px-Leaf_icon_15.svg.png",
-      "sizes": "512x512",
+      "src": "https://cdn-icons-png.flaticon.com/192/606/606552.png",
+      "sizes": "192x192",
       "type": "image/png"
     }
   ]
