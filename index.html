@@ -3,192 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garhi Ahbaran - Smart Village</title>
+    <title>Garhi Ahbaran Smart Village</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#2e7d32">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div id="splash-screen" class="gradient-bg flex-center">
-        <div class="text-center text-white">
-            <span class="material-icons-round" style="font-size: 80px;">eco</span>
-            <h1 style="font-size: 2.5rem; margin-top: 10px;">Garhi Ahbaran</h1>
-            <p style="opacity: 0.8; font-size: 1.2rem;">Smart Village Community</p>
-            <div class="loader mt-20"></div>
-        </div>
+    <div id="splash-screen" class="glass-panel">
+        <span class="material-icons splash-icon">grass</span>
+        <h1>Garhi Ahbaran</h1>
+        <p>Smart Village Platform</p>
+        <div class="loader"></div>
     </div>
 
-    <div id="login-section" class="hidden flex-center bg-light">
-        <div class="card login-card text-center">
-            <span class="material-icons-round text-primary" style="font-size: 60px;">diversity_3</span>
-            <h2 class="mt-10">Welcome Home</h2>
-            <p class="text-muted mb-20">Join the digital village community</p>
-            <button id="btn-google-login" class="btn btn-social btn-google mb-10">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G"> Continue with Google
+    <div id="login-section" class="hidden">
+        <div class="glass-panel login-card">
+            <span class="material-icons login-icon">account_circle</span>
+            <h2>Welcome to Garhi Ahbaran</h2>
+            <p>Please login to continue</p>
+            <button id="btn-google-login" class="btn btn-primary">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" class="google-logo">
+                Login with Google
             </button>
-            <div class="divider">OR</div>
-            <button id="btn-guest-login" class="btn btn-outline-primary w-100">Explore as Guest</button>
+            <button id="btn-guest-login" class="btn btn-secondary">Continue as Guest</button>
         </div>
     </div>
 
     <div id="app-container" class="hidden">
-        <nav class="sidebar card">
-            <div class="sidebar-header">
-                <h2>Garhi Ahbaran</h2>
+        <nav class="sidebar glass-panel">
+            <div class="user-profile">
+                <img id="user-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
+                <div>
+                    <h3 id="user-name">Guest User</h3>
+                    <p id="user-email" class="text-sm">guest@garhi.village</p>
+                </div>
             </div>
-            <ul class="nav-links mt-20">
-                <li data-target="dashboard" class="active"><span class="material-icons-round">home</span> Home</li>
-                <li data-target="community"><span class="material-icons-round">dynamic_feed</span> Social Feed</li>
-                <li data-target="gallery"><span class="material-icons-round">collections</span> Gallery</li>
-                <li data-target="chat"><span class="material-icons-round">forum</span> Public Chat</li>
-                <li data-target="private-chat" id="nav-private-chat" class="hidden"><span class="material-icons-round">chat_bubble</span> Private Chat</li>
-                <li data-target="directory"><span class="material-icons-round">contacts</span> Directory</li>
-                <li data-target="profile" id="nav-profile"><span class="material-icons-round">account_circle</span> My Profile</li>
-                <li data-target="admin" id="nav-admin" class="hidden text-danger"><span class="material-icons-round">admin_panel_settings</span> Admin Panel</li>
+            <ul class="nav-links">
+                <li data-target="dashboard" class="active"><span class="material-icons">home</span> Dashboard</li>
+                <li data-target="community"><span class="material-icons">dynamic_feed</span> Community Posts</li>
+                <li data-target="gallery"><span class="material-icons">photo_library</span> Village Gallery</li>
+                <li data-target="news"><span class="material-icons">article</span> Official News</li>
+                <li data-target="chat"><span class="material-icons">forum</span> Public Chat</li>
+                <li data-target="private-chat" id="nav-private-chat" class="hidden"><span class="material-icons">chat</span> Private Chat</li>
+                <li data-target="directory"><span class="material-icons">contacts</span> Directory</li>
+                <li data-target="complaints"><span class="material-icons">report_problem</span> Complaints</li>
+                <li data-target="admin" id="nav-admin" class="hidden"><span class="material-icons">admin_panel_settings</span> Admin Panel</li>
             </ul>
-            <div class="sidebar-footer">
-                <button id="btn-logout" class="btn btn-danger w-100"><span class="material-icons-round">logout</span> Logout</button>
-            </div>
+            <button id="btn-logout" class="btn btn-danger"><span class="material-icons">logout</span> Logout</button>
         </nav>
 
         <main class="content-area">
-            <header class="mobile-header card">
-                <span class="material-icons-round" id="menu-toggle">menu</span>
-                <h3 class="text-primary">Garhi Ahbaran</h3>
-                <img id="mobile-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-sm" alt="Profile">
+            <header class="mobile-header glass-panel">
+                <span class="material-icons" id="menu-toggle">menu</span>
+                <h2>Garhi Ahbaran</h2>
+                <a href="https://wa.me/910000000000" target="_blank" class="whatsapp-btn"><span class="material-icons">whatsapp</span></a>
             </header>
 
             <section id="dashboard" class="page active">
-                <div class="hero-slider card" id="hero-slider">
+                <div class="hero-slider glass-panel" id="hero-slider">
                     <div class="slide active">
                         <img src="https://images.unsplash.com/photo-1596443686812-2f45229eebc3?auto=format&fit=crop&w=1000&q=80" alt="Village">
                         <div class="slide-caption">Welcome to Garhi Ahbaran Smart Village</div>
                     </div>
                 </div>
 
-                <div class="section-title mt-20">
-                    <h3><span class="material-icons-round">campaign</span> Official News</h3>
+                <div class="grid-cards">
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'community\']').click()">
+                        <span class="material-icons">dynamic_feed</span>
+                        <h3>Community</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'gallery\']').click()">
+                        <span class="material-icons">photo_library</span>
+                        <h3>Gallery</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'chat\']').click()">
+                        <span class="material-icons">forum</span>
+                        <h3>Live Chat</h3>
+                    </div>
+                    <div class="card glass-panel" onclick="document.querySelector('[data-target=\'directory\']').click()">
+                        <span class="material-icons">contacts</span>
+                        <h3>Directory</h3>
+                    </div>
                 </div>
-                <div id="news-container" class="grid-news"></div>
             </section>
 
             <section id="community" class="page hidden">
-                <div class="create-post card mb-20">
-                    <div class="create-post-header">
-                        <img id="post-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-sm">
-                        <textarea id="post-text" placeholder="What's happening in the village?" rows="2"></textarea>
-                    </div>
-                    <div id="image-preview-container" class="hidden mt-10">
-                        <img id="post-image-preview" src="" alt="Preview" style="max-height: 200px; border-radius: 8px;">
-                    </div>
-                    <div class="create-post-actions mt-10">
-                        <label for="post-image" class="action-btn text-primary cursor-pointer">
-                            <span class="material-icons-round">image</span> Photo
-                            <input type="file" id="post-image" accept="image/*" class="hidden">
-                        </label>
-                        <button id="btn-submit-post" class="btn btn-primary">Post</button>
-                    </div>
-                    <div id="post-upload-loader" class="text-sm text-primary hidden mt-10">Uploading your post for admin approval...</div>
-                </div>
-                <div id="posts-container" class="feed-container"></div>
+                <h2>Community Posts</h2>
+                <form id="post-form" class="glass-panel form-layout">
+                    <h3>Write a Post</h3>
+                    <textarea id="post-text" placeholder="What's happening in the village?" required></textarea>
+                    <input type="file" id="post-image" accept="image/*">
+                    <button type="submit" class="btn btn-primary" id="btn-submit-post">Submit for Approval</button>
+                    <div id="post-upload-loader" class="hidden text-sm" style="color:var(--primary)">Uploading... Please wait.</div>
+                </form>
+                <div id="posts-container" class="list-container"></div>
             </section>
 
             <section id="gallery" class="page hidden">
-                <div class="section-title">
-                    <h3><span class="material-icons-round">photo_library</span> Village Gallery</h3>
-                </div>
+                <h2>Village Gallery</h2>
                 <div id="gallery-grid" class="gallery-grid"></div>
             </section>
 
-            <section id="profile" class="page hidden">
-                <div class="card profile-header text-center">
-                    <img id="profile-avatar-large" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-lg mb-10">
-                    <h2 id="profile-name">User Name</h2>
-                    <p id="profile-email" class="text-muted">email@example.com</p>
-                    <div class="badge mt-10" id="profile-role">Verified Villager</div>
-                </div>
-                <h3 class="mt-20 mb-10">My Pending/Approved Posts</h3>
-                <div id="my-posts-container" class="feed-container"></div>
-            </section>
-
-            <section id="directory" class="page hidden">
-                <div class="section-title">
-                    <h3><span class="material-icons-round">contacts</span> Village Directory</h3>
-                </div>
-                <div class="card mb-20 p-10">
-                    <input type="text" id="dir-search" placeholder="Search by name or mobile..." class="form-control">
-                </div>
-                <div id="dir-container" class="grid-directory"></div>
+            <section id="news" class="page hidden">
+                <h2>Official News</h2>
+                <div id="news-container" class="list-container"></div>
             </section>
 
             <section id="chat" class="page hidden chat-layout">
-                <div class="card chat-container">
-                    <div class="chat-header">
-                        <h3><span class="material-icons-round">forum</span> Village Chaupal (Public Chat)</h3>
-                    </div>
-                    <div id="chat-box" class="chat-messages"></div>
-                    <form id="chat-form" class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="Type a message..." required autocomplete="off" class="form-control">
-                        <button type="submit" class="btn btn-primary btn-icon"><span class="material-icons-round">send</span></button>
-                    </form>
-                </div>
+                <h2>Public Village Chat</h2>
+                <div id="chat-box" class="glass-panel chat-box-area"></div>
+                <form id="chat-form" class="glass-panel chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Type a message... 😄" required autocomplete="off">
+                    <button type="submit" class="btn btn-primary"><span class="material-icons">send</span></button>
+                </form>
             </section>
 
             <section id="private-chat" class="page hidden chat-layout">
-                <div class="card private-chat-container">
-                    <div class="users-sidebar" id="pc-users-list">
+                <h2>Private Chat</h2>
+                <div class="private-chat-wrapper glass-panel">
+                    <div class="users-list" id="pc-users-list">
                         </div>
-                    <div class="chat-area hidden" id="pc-dm-area">
-                        <div class="chat-header" id="pc-dm-header">Chatting with...</div>
-                        <div id="pc-chat-box" class="chat-messages"></div>
+                    <div class="dm-area hidden" id="pc-dm-area">
+                        <div class="dm-header" id="pc-dm-header">Chatting with...</div>
+                        <div id="pc-chat-box" class="chat-box-area" style="height: 300px;"></div>
                         <form id="pc-chat-form" class="chat-input-area">
-                            <input type="text" id="pc-chat-input" placeholder="Private message..." required autocomplete="off" class="form-control">
-                            <button type="submit" class="btn btn-primary btn-icon"><span class="material-icons-round">send</span></button>
+                            <input type="text" id="pc-chat-input" placeholder="Private message..." required autocomplete="off">
+                            <button type="submit" class="btn btn-primary"><span class="material-icons">send</span></button>
                         </form>
                     </div>
                 </div>
             </section>
 
-            <section id="admin" class="page hidden">
-                <div class="section-title">
-                    <h3 class="text-danger"><span class="material-icons-round">admin_panel_settings</span> Admin Dashboard</h3>
+            <section id="directory" class="page hidden">
+                <h2>Village Directory</h2>
+                <div class="glass-panel search-box" style="padding:15px; margin-bottom:15px;">
+                    <input type="text" id="dir-search" placeholder="Search family or mobile..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
                 </div>
-                <div class="admin-tabs mb-20">
-                    <button class="btn btn-primary active" onclick="showAdminTab('admin-pending')">Pending Posts</button>
-                    <button class="btn btn-outline-primary" onclick="showAdminTab('admin-news')">Add News</button>
-                    <button class="btn btn-outline-primary" onclick="showAdminTab('admin-dir')">Add Directory</button>
+                <div id="dir-container" class="list-container"></div>
+            </section>
+
+            <section id="complaints" class="page hidden">
+                <h2>Submit a Complaint</h2>
+                <form id="complaint-form" class="glass-panel form-layout">
+                    <select id="comp-type" required>
+                        <option value="">Select Category</option>
+                        <option value="Water">Water Supply</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Roads">Roads & Cleanliness</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <textarea id="comp-desc" placeholder="Describe your issue..." required></textarea>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+                <div id="user-complaints-container" class="list-container"></div>
+            </section>
+
+            <section id="admin" class="page hidden">
+                <h2>Admin Panel</h2>
+                <div class="admin-tabs">
+                    <button class="btn btn-secondary active" onclick="showAdminTab('admin-pending')">Pending Posts</button>
+                    <button class="btn btn-secondary" onclick="showAdminTab('admin-news')">Add News/Slide</button>
+                    <button class="btn btn-secondary" onclick="showAdminTab('admin-dir')">Add Directory</button>
                 </div>
                 
                 <div id="admin-pending" class="admin-tab active">
-                    <div id="admin-pending-list" class="feed-container"></div>
+                    <div id="admin-pending-list" class="list-container"></div>
                 </div>
 
-                <div id="admin-news" class="admin-tab hidden card p-20">
-                    <h3>Publish News / Slider Image</h3>
-                    <form id="add-news-form" class="mt-10">
-                        <input type="text" id="news-title" placeholder="Headline" class="form-control mb-10" required>
-                        <textarea id="news-content" placeholder="Full Details" class="form-control mb-10" rows="3" required></textarea>
-                        <input type="file" id="news-image" accept="image/*" class="form-control mb-10">
-                        <label class="flex-align-center mb-10"><input type="checkbox" id="news-is-slide" class="mr-10"> Show image in Home Slider?</label>
-                        <button type="submit" class="btn btn-primary" id="btn-submit-news">Publish News</button>
-                        <div id="news-upload-loader" class="text-sm hidden mt-10">Uploading...</div>
+                <div id="admin-news" class="admin-tab hidden">
+                    <form id="add-news-form" class="glass-panel form-layout">
+                        <h3>Publish Official News</h3>
+                        <input type="text" id="news-title" placeholder="News Title" required>
+                        <textarea id="news-content" placeholder="News Content" required></textarea>
+                        <input type="file" id="news-image" accept="image/*">
+                        <label><input type="checkbox" id="news-is-slide"> Show in Hero Slider?</label>
+                        <button type="submit" class="btn btn-primary" id="btn-submit-news">Publish</button>
+                        <div id="news-upload-loader" class="hidden text-sm">Uploading...</div>
                     </form>
+                    <div id="admin-news-list" class="list-container" style="margin-top:20px;"></div>
                 </div>
 
-                <div id="admin-dir" class="admin-tab hidden card p-20">
-                    <h3>Add Family to Directory</h3>
-                    <form id="dir-form" class="mt-10 grid-form">
-                        <input type="text" id="dir-name" placeholder="Head of Family Name" class="form-control" required>
-                        <input type="tel" id="dir-mobile" placeholder="Mobile Number" class="form-control" required>
-                        <input type="number" id="dir-members" placeholder="Total Members" class="form-control" required>
-                        <input type="text" id="dir-address" placeholder="House No. / Ward" class="form-control" required>
-                        <button type="submit" class="btn btn-primary mt-10" style="grid-column: 1 / -1;">Save Entry</button>
+                <div id="admin-dir" class="admin-tab hidden">
+                    <form id="dir-form" class="glass-panel form-layout">
+                        <h3>Add Directory Entry</h3>
+                        <input type="text" id="dir-name" placeholder="Family Head Name" required>
+                        <input type="tel" id="dir-mobile" placeholder="Mobile Number" required>
+                        <input type="number" id="dir-members" placeholder="Number of Members" required>
+                        <input type="text" id="dir-address" placeholder="Address/House No." required>
+                        <button type="submit" class="btn btn-primary">Add Entry</button>
                     </form>
                 </div>
             </section>
 
-            <button id="floating-admin-btn" class="floating-btn"><span class="material-icons-round">lock</span></button>
+            <button id="floating-admin-btn" class="floating-admin"><span class="material-icons">lock</span></button>
         </main>
     </div>
 
@@ -199,16 +207,14 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW Setup Failed', err));
+                navigator.serviceWorker.register('./service-worker.js').catch(err => console.log(err));
             });
         }
         function showAdminTab(tabId) {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
-            const btns = document.querySelectorAll('.admin-tabs .btn');
-            btns.forEach(btn => { btn.classList.remove('btn-primary'); btn.classList.add('btn-outline-primary'); });
-            event.target.classList.remove('btn-outline-primary');
-            event.target.classList.add('btn-primary');
+            document.querySelectorAll('.admin-tabs .btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
         }
     </script>
 </body>
