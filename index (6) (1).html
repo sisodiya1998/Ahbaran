@@ -1,0 +1,3464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart 11 - Cricket Prediction v3.1</title>
+<!-- PWA manifest injected via JS -->
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- Firebase loaded in head (no type=module, global scope) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// Stub functions defined early so onclick="" works before main script loads
+// They queue calls until real functions are ready
+window._q=[];
+['stab','doLogin','doSignup','doGoogle','doLogout','goPage','cm','toast',
+ 'startQuiz','pickOpt','proceedJoin','confirmJoin','openDep','submitDep',
+ 'openWd','submitWd','ansBQ','ansSQ','toggleChat','sendMsg','installApp',
+ 'claimDailyBonus'
+].forEach(function(fn){
+  window[fn]=function(){
+    var args=Array.prototype.slice.call(arguments);
+    if(window['_real_'+fn]){window['_real_'+fn].apply(null,args);}
+    else{window._q.push([fn,args]);}
+  };
+});
+window._drainQ=function(){
+  window._q.forEach(function(item){
+    if(window['_real_'+item[0]])window['_real_'+item[0]].apply(null,item[1]);
+  });
+  window._q=[];
+};
+</script>
+
+<style>
+:root{--bg:#050a14;--bg2:#0a1628;--bg3:rgba(10,22,48,0.9);--neon:#00d4ff;--neon2:#0099cc;--glow:rgba(0,212,255,0.22);--green:#00ff88;--red:#ff3b5c;--gold:#ffd700;--orange:#ff6b35;--purple:#a855f7;--text:#e0f0ff;--muted:#7a9cc0;--border:rgba(0,212,255,0.16);--glass:rgba(0,212,255,0.05);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(0,80,180,0.15),transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(0,150,255,0.08),transparent 55%);pointer-events:none;z-index:0;}
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+/* AUTH */
+#auth-screen{display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
+.a-logo{text-align:center;margin-bottom:24px;}
+.a-logo .ico{font-size:52px;filter:drop-shadow(0 0 16px var(--neon));}
+.a-logo h1{font-family:'Rajdhani',sans-serif;font-size:38px;font-weight:700;background:linear-gradient(135deg,var(--neon),#fff,var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;}
+.a-logo p{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+.a-box{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:24px 20px;width:100%;max-width:380px;backdrop-filter:blur(20px);}
+.tabs{display:flex;gap:5px;margin-bottom:18px;background:var(--bg2);border-radius:9px;padding:3px;}
+.tab{flex:1;padding:9px;border:none;background:transparent;color:var(--muted);border-radius:7px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:13px;font-weight:600;transition:all .3s;}
+.tab.on{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;}
+.ig{margin-bottom:13px;}
+.ig label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;}
+.ig input{width:100%;padding:10px 13px;background:rgba(0,212,255,0.05);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;transition:all .3s;}
+.ig input:focus{border-color:var(--neon);}
+.btn-m{width:100%;padding:12px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:11px;color:#000;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:all .3s;}
+.btn-m:hover{transform:translateY(-1px);box-shadow:0 0 20px var(--glow);}
+.div-or{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--muted);font-size:10px;}
+.div-or::before,.div-or::after{content:'';flex:1;height:1px;background:var(--border);}
+.btn-g{width:100%;padding:11px;background:#fff;border:none;border-radius:11px;color:#333;font-family:'Exo 2',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .3s;}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.bonus-b{text-align:center;margin-top:11px;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.22);border-radius:7px;padding:6px;font-size:11px;color:var(--green);}
+.err{color:var(--red);font-size:11px;margin-top:5px;text-align:center;min-height:15px;}
+/* MAIN */
+#main-screen{padding-top:66px;padding-bottom:70px;}
+/* NAVBAR */
+#navbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(5,10,20,0.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;}
+.n-logo{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;background:linear-gradient(135deg,var(--neon),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.n-right{display:flex;align-items:center;gap:7px;}
+.n-chip{display:flex;align-items:center;gap:4px;border-radius:7px;padding:4px 9px;cursor:pointer;border:1px solid;}
+.n-pts{background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.25);}
+.n-pts span{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--purple);}
+.n-bal{background:var(--glass);border-color:var(--border);}
+.n-bal span{font-size:13px;font-weight:700;color:var(--gold);}
+.n-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--neon2),var(--neon));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:12px;cursor:pointer;overflow:hidden;flex-shrink:0;}
+.n-av img{width:100%;height:100%;object-fit:cover;}
+/* BOTTOM NAV */
+#botnav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(5,10,20,0.97);backdrop-filter:blur(18px);border-top:1px solid var(--border);display:flex;}
+.bn{flex:1;padding:9px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'Exo 2',sans-serif;font-size:9px;font-weight:500;transition:all .3s;position:relative;}
+.bn .bi{font-size:19px;}
+.bn.on{color:var(--neon);}
+.bn.on .bi{filter:drop-shadow(0 0 4px var(--neon));}
+.bn-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;min-width:14px;text-align:center;}
+/* PAGES */
+.page{display:none;padding:12px;}
+.page.on{display:block;}
+/* HERO */
+.hero{background:linear-gradient(135deg,#001535,#002550);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;}
+.hero::before{content:'🏏';position:absolute;right:-6px;top:-6px;font-size:80px;opacity:0.07;transform:rotate(20deg);}
+.hero h2{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--neon);}
+.hero p{font-size:11px;color:var(--muted);margin:3px 0 9px;}
+.hero .tag{display:inline-block;background:linear-gradient(135deg,var(--gold),#ff8c00);color:#000;font-weight:700;font-size:10px;padding:2px 8px;border-radius:4px;}
+/* SECTION HDR */
+.sh{display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px;}
+.sh h3{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;}
+.live-dot{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+/* POOL CARD */
+.pc{background:var(--bg3);border:1px solid var(--border);border-radius:13px;padding:13px;margin-bottom:9px;backdrop-filter:blur(8px);transition:all .3s;}
+.pc:hover{border-color:var(--neon);}
+.pc-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.pc-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;}
+.pc-fee{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;font-weight:700;font-size:11px;padding:3px 8px;border-radius:6px;}
+.pc-stats{display:flex;gap:12px;font-size:10px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap;}
+.pc-stats span b{color:var(--text);font-size:12px;}
+.pc-ptag{background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.22);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--purple);margin-bottom:7px;display:inline-block;}
+.prog{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-bottom:9px;overflow:hidden;}
+.prog-f{height:100%;background:linear-gradient(90deg,var(--neon2),var(--neon));border-radius:2px;}
+.btn-j{width:100%;padding:9px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;}
+.btn-j:hover{transform:translateY(-1px);box-shadow:0 0 16px var(--glow);}
+.btn-j:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+/* LIVE BONUS */
+.lbc{border-radius:13px;padding:14px;margin-bottom:12px;position:relative;overflow:hidden;}
+.lbc-off{background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.2);}
+.lbc-on{background:linear-gradient(135deg,rgba(0,255,136,0.07),rgba(0,212,255,0.05));border:1px solid rgba(0,255,136,0.25);}
+.lbc-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+.lbc-timer{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--green);margin:6px 0;}
+.lbc-info{font-size:11px;color:var(--muted);}
+/* DAILY BONUS */
+.dbc{background:linear-gradient(135deg,rgba(255,215,0,0.07),rgba(255,107,53,0.05));border:1px solid rgba(255,215,0,0.25);border-radius:13px;padding:14px;margin-bottom:12px;}
+.dbc-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:7px;color:var(--gold);}
+.dbc-sub{font-size:11px;color:var(--muted);margin-bottom:9px;}
+.btn-db{padding:10px 22px;background:linear-gradient(135deg,#b8860b,var(--gold));border:none;border-radius:9px;color:#000;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;}
+.btn-db:disabled{opacity:.5;cursor:not-allowed;}
+.btn-db:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 0 14px rgba(255,215,0,0.4);}
+/* QUESTIONS */
+.qc{background:var(--bg3);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:9px;}
+.qc.bonus{border-color:rgba(0,255,136,0.25);background:linear-gradient(135deg,rgba(0,255,136,0.04),rgba(0,212,255,0.03));}
+.qc.score{border-color:rgba(255,215,0,0.22);background:linear-gradient(135deg,rgba(255,215,0,0.04),rgba(255,107,53,0.03));}
+.qbadge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;margin-bottom:7px;display:inline-block;letter-spacing:.5px;}
+.qb-p{background:rgba(0,212,255,0.1);color:var(--neon);}
+.qb-b{background:rgba(0,255,136,0.1);color:var(--green);}
+.qb-s{background:rgba(255,215,0,0.1);color:var(--gold);}
+.qt{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.3;}
+.qmeta{font-size:10px;color:var(--orange);margin-bottom:9px;}
+.opts{display:flex;flex-direction:column;gap:6px;}
+.opt{width:100%;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:12px;cursor:pointer;text-align:left;transition:all .3s;display:flex;align-items:center;justify-content:space-between;}
+.opt:hover{border-color:var(--neon);background:rgba(0,212,255,0.05);}
+.opt.sel{border-color:var(--neon);background:rgba(0,212,255,0.1);color:var(--neon);}
+.opt.ok{border-color:var(--green);background:rgba(0,255,136,0.1);color:var(--green);}
+.opt.no{border-color:var(--red);background:rgba(255,59,92,0.08);color:var(--red);opacity:.7;}
+.opt:disabled,.opt[disabled]{cursor:not-allowed;}
+.ans-b{text-align:center;padding:7px;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.22);border-radius:7px;color:var(--green);font-size:11px;margin-top:6px;}
+.pts-pill{background:rgba(255,215,0,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;}
+/* LEADERBOARD */
+.lb-item{display:flex;align-items:center;gap:10px;padding:11px;background:var(--bg3);border:1px solid var(--border);border-radius:11px;margin-bottom:7px;transition:all .3s;}
+.lb-item.me{border-color:var(--neon);background:rgba(0,212,255,0.05);}
+.lb-r{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;width:28px;text-align:center;flex-shrink:0;}
+.r1{color:var(--gold);}
+.r2{color:#c0c0c0;}
+.r3{color:#cd7f32;}
+.lb-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--neon2),var(--neon));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;overflow:hidden;}
+.lb-av img{width:100%;height:100%;object-fit:cover;}
+.lb-info{flex:1;}
+.lb-name{font-size:13px;font-weight:700;}
+.lb-sub{font-size:10px;color:var(--muted);}
+.lb-pts{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--purple);}
+/* POINTS PAGE */
+.pts-hero{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(0,212,255,0.08));border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;}
+.big-p{font-family:'Rajdhani',sans-serif;font-size:58px;font-weight:700;color:var(--purple);line-height:1;}
+.pts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.pb{background:rgba(0,0,0,0.25);border-radius:9px;padding:10px;text-align:center;}
+.pb .v{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;}
+.pb .l{font-size:9px;color:var(--muted);margin-top:2px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.ib{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center;}
+.ib .iv{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;}
+.ib .il{font-size:9px;color:var(--muted);margin-top:2px;}
+/* WALLET */
+.wc{background:linear-gradient(135deg,#001535,#002550);border:1px solid var(--neon);border-radius:16px;padding:22px;text-align:center;margin-bottom:16px;}
+.wc .lbl{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.wc .amt{font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700;color:var(--gold);line-height:1;margin:5px 0;}
+.w-acts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;}
+.btn-add{padding:12px;border:none;border-radius:11px;background:linear-gradient(135deg,#006600,var(--green));color:#000;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-wd{padding:12px;border:none;border-radius:11px;background:linear-gradient(135deg,#8b0000,var(--red));color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.ti{display:flex;align-items:center;justify-content:space-between;padding:11px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;}
+.ti-i .tt{font-size:12px;font-weight:600;}
+.ti-i .td{font-size:9px;color:var(--muted);margin-top:2px;}
+.ti-a{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;}
+.cr{color:var(--green);}
+.dr{color:var(--red);}
+/* PROFILE */
+.prc{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px;}
+.pr-av{width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--neon2),var(--neon));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;margin:0 auto 9px;border:3px solid var(--neon);overflow:hidden;}
+.pr-av img{width:100%;height:100%;object-fit:cover;}
+.pr-name{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;}
+.pr-email{font-size:11px;color:var(--muted);margin:2px 0 10px;}
+.pr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.prs{background:rgba(0,212,255,0.04);border:1px solid var(--border);border-radius:8px;padding:9px 3px;text-align:center;}
+.prs .sv{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--neon);}
+.prs .sl{font-size:8px;color:var(--muted);margin-top:2px;}
+.btn-out{width:100%;padding:11px;background:rgba(255,59,92,0.08);border:1px solid var(--red);border-radius:10px;color:var(--red);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;transition:all .3s;}
+.btn-out:hover{background:var(--red);color:#fff;}
+/* ADMIN PANEL */
+.adm-sec{background:var(--bg3);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:12px;}
+.adm-sec h4{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--neon);margin-bottom:10px;}
+.adm-row{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;}
+.adm-row .ig{flex:1;min-width:100px;margin-bottom:0;}
+.adm-row .ig input,.adm-row .ig select{padding:8px 10px;font-size:12px;}
+.adm-row .ig select{width:100%;background:rgba(0,212,255,0.05);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Exo 2',sans-serif;outline:none;}
+.btn-adm{padding:9px 14px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-adm-r{padding:7px 12px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:7px;color:var(--red);font-family:'Exo 2',sans-serif;font-size:11px;cursor:pointer;}
+.btn-adm-e{padding:7px 12px;background:rgba(0,212,255,0.08);border:1px solid var(--border);border-radius:7px;color:var(--neon);font-family:'Exo 2',sans-serif;font-size:11px;cursor:pointer;}
+.pool-adm-item{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:9px;padding:10px;margin-bottom:7px;}
+.pool-adm-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;}
+.pool-adm-meta{font-size:10px;color:var(--muted);margin-bottom:6px;}
+.pool-adm-acts{display:flex;gap:6px;}
+.prize-preview{background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:7px;padding:8px;margin-top:8px;font-size:10px;color:var(--gold);}
+/* PH */
+.ph-item{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;}
+.ph-i .pt{font-size:12px;font-weight:600;}
+.ph-i .pd{font-size:9px;color:var(--muted);margin-top:1px;}
+.ph-p{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--purple);}
+/* MODALS */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(7px);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.mov.open{display:flex;}
+.modal{background:#0a1628;border:1px solid var(--border);border-radius:16px;padding:22px 18px;width:100%;max-width:420px;box-shadow:0 0 40px rgba(0,212,255,0.1);max-height:90vh;overflow-y:auto;}
+.modal h3{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;margin-bottom:16px;color:var(--neon);}
+.qrb{text-align:center;padding:14px;background:rgba(0,212,255,0.03);border:1px solid var(--border);border-radius:11px;margin-bottom:12px;}
+.upi-id{font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--neon);font-weight:600;margin-top:7px;}
+.min-n{font-size:10px;color:var(--orange);margin:4px 0 0;font-weight:600;}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.btn-c{padding:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Exo 2',sans-serif;font-size:12px;cursor:pointer;}
+.btn-ok{padding:10px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+/* QUIZ MODAL */
+.qp-bar{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;margin-bottom:4px;overflow:hidden;}
+.qp-fill{height:100%;background:linear-gradient(90deg,var(--neon2),var(--neon));border-radius:3px;transition:width .4s ease;}
+.qp-num{font-size:10px;color:var(--muted);text-align:right;margin-bottom:12px;}
+.quiz-done{background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.22);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;}
+/* CHATBOT */
+#chatbot-btn{position:fixed;bottom:82px;right:13px;z-index:150;width:48px;height:48px;background:linear-gradient(135deg,var(--neon2),var(--neon));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px var(--glow);cursor:pointer;border:none;transition:transform .3s;}
+#chatbot-btn:hover{transform:scale(1.1);}
+#chat-window{display:none;position:fixed;bottom:140px;right:13px;z-index:149;width:300px;max-height:420px;background:#0a1628;border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;flex-direction:column;}
+#chat-window.open{display:flex;}
+.chat-hdr{background:linear-gradient(135deg,var(--neon2),var(--neon));padding:12px 14px;display:flex;align-items:center;justify-content:space-between;}
+.chat-hdr span{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#000;}
+.chat-close{background:none;border:none;color:#000;font-size:18px;cursor:pointer;padding:0;}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px;}
+.chat-msg{max-width:85%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.4;}
+.chat-msg.admin{background:rgba(0,212,255,0.1);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-radius:3px 10px 10px 10px;}
+.chat-msg.user{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;align-self:flex-end;border-radius:10px 3px 10px 10px;}
+.chat-msg .cm-time{font-size:9px;opacity:.6;margin-top:3px;}
+.chat-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);}
+.chat-input-row input{flex:1;padding:8px 10px;background:rgba(0,212,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:12px;outline:none;}
+.chat-send{padding:8px 12px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-size:14px;cursor:pointer;font-weight:700;}
+.chat-typing{font-size:11px;color:var(--muted);padding:0 12px 8px;display:none;}
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+.notif-popup{position:fixed;top:70px;left:12px;right:12px;background:rgba(10,22,48,0.98);border:1px solid var(--purple);border-radius:14px;padding:14px 16px;z-index:999;box-shadow:0 4px 24px rgba(168,85,247,0.3);animation:slideDown .3s ease;}
+@keyframes slideDown{from{transform:translateY(-20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.notif-popup-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--purple);margin-bottom:4px;}
+.notif-popup-body{font-size:12px;color:var(--text);margin-bottom:10px;}
+.notif-popup-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+.notif-popup-action{display:flex;gap:8px;}
+.notif-popup-action button{flex:1;padding:8px;border:none;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ============================================================
+   AD SLOTS — Responsive ad placement areas
+   Replace the placeholder divs with your ad code
+   ============================================================ */
+.ad-slot{width:100%;overflow:hidden;text-align:center;background:transparent;}
+.ad-slot-banner{min-height:50px;margin:8px 0;}
+.ad-slot-rect{min-height:100px;margin:10px 0;}
+.ad-slot-sticky{position:fixed;bottom:62px;left:0;right:0;z-index:120;text-align:center;background:rgba(5,10,20,0.95);backdrop-filter:blur(6px);border-top:1px solid rgba(0,212,255,0.1);padding:4px 0;}
+.ad-slot-sticky.hidden{display:none;}
+.ad-placeholder{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:8px;color:rgba(255,255,255,0.15);font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+.ad-close-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;line-height:1;}
+
+/* ============================================================
+   IPL SCHEDULE TICKER
+   ============================================================ */
+.ipl-ticker-wrap{background:linear-gradient(135deg,rgba(5,10,20,0.95),rgba(10,20,40,0.95));border:1px solid rgba(0,212,255,0.15);border-radius:12px;margin:10px 0;overflow:hidden;position:relative;}
+.ipl-ticker-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(0,212,255,0.1);background:rgba(0,212,255,0.04);}
+.ipl-ticker-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--neon);letter-spacing:2px;text-transform:uppercase;}
+.ipl-ticker-live{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.ipl-ticker-scroll{overflow:hidden;padding:0;}
+.ipl-ticker-inner{display:flex;gap:0;animation:tickerSlide 40s linear infinite;width:max-content;}
+.ipl-ticker-inner:hover{animation-play-state:paused;}
+@keyframes tickerSlide{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.ipl-match-card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:200px;padding:10px 14px;border-right:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .2s;}
+.ipl-match-card:hover{background:rgba(0,212,255,0.06);}
+.ipl-match-date{font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:.5px;}
+.ipl-match-teams{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.ipl-team-badge{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.ipl-vs{font-size:9px;color:var(--muted);font-weight:700;}
+.ipl-match-venue{font-size:9px;color:var(--muted);}
+.ipl-match-time{font-size:9px;color:var(--orange);font-weight:600;margin-top:2px;}
+.ipl-today-badge{background:rgba(0,255,136,0.15);color:var(--green);font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:4px;}
+.ipl-done-badge{background:rgba(255,255,255,0.06);color:var(--muted);font-size:8px;padding:1px 5px;border-radius:3px;}
+
+/* INSTALL BTN */
+#inst-btn{display:none;position:fixed;bottom:82px;right:14px;background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;border:none;border-radius:50px;padding:12px 20px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:800;cursor:pointer;z-index:150;white-space:nowrap;letter-spacing:1px;box-shadow:0 4px 24px rgba(0,212,255,0.5);align-items:center;gap:6px;}
+@keyframes installPulse{0%,100%{box-shadow:0 4px 20px rgba(0,255,136,0.4);}50%{box-shadow:0 4px 30px rgba(0,255,136,0.8);}}
+#ios-install-banner{display:none;position:fixed;bottom:82px;left:12px;right:12px;background:rgba(10,22,48,0.98);border:1px solid var(--neon);border-radius:14px;padding:13px 15px;z-index:150;box-shadow:0 4px 20px rgba(0,212,255,0.3);}
+#ios-install-banner .iib-t{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--neon);margin-bottom:5px;}
+#ios-install-banner .iib-s{font-size:11px;color:var(--muted);}
+#ios-install-banner .iib-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+/* EMPTY */
+.empty{text-align:center;padding:32px 14px;color:var(--muted);}
+.empty .ei{font-size:40px;margin-bottom:8px;opacity:.5;}
+/* LDOTS */
+.ld{display:inline-flex;gap:3px;}
+.ld span{width:5px;height:5px;border-radius:50%;background:var(--neon);animation:bl 1.2s infinite;}
+.ld span:nth-child(2){animation-delay:.2s}
+.ld span:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,100%{opacity:.2}50%{opacity:1}}
+/* TOAST */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,22,48,0.97);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;z-index:999;display:none;max-width:290px;text-align:center;}
+#toast.show{display:block;animation:su .3s ease;}
+@keyframes su{from{transform:translateX(-50%) translateY(14px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ===== POLL ENHANCEMENTS ===== */
+/* Big JOIN NOW button */
+.btn-j{font-size:15px;padding:12px;letter-spacing:1px;}
+.btn-j.big-join{
+  font-size:20px!important;
+  padding:15px!important;
+  letter-spacing:2px!important;
+  background:linear-gradient(135deg,#e65c00,#f9d423,#e65c00)!important;
+  background-size:200% 100%!important;
+  animation:shinebtn 2s linear infinite!important;
+  color:#000!important;
+  font-weight:900!important;
+  border-radius:12px!important;
+  box-shadow:0 0 24px rgba(249,212,35,0.4)!important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.2)!important;
+}
+@keyframes shinebtn{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* Entry fee display on card */
+.pc-fee{font-size:14px!important;padding:5px 12px!important;font-weight:900!important;}
+
+/* Poll countdown timer styling */
+.poll-countdown{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="screen" style="display:flex">
+  <div class="a-logo"><div class="ico">🏏</div><h1>SMART 11</h1><p>Cricket Prediction Platform</p></div>
+  <div class="a-box">
+    <div class="tabs">
+      <button class="tab on" id="tl" onclick="stab('login')">LOGIN</button>
+      <button class="tab" id="ts" onclick="stab('signup')">SIGN UP</button>
+    </div>
+    <!-- LOGIN FORM -->
+    <div id="lf">
+      <div class="ig"><label for="le">Email</label><input type="email" id="le" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="ig"><label for="lp">Password</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="btn-m" onclick="(window._real_doLogin||window.doLogin)()">LOGIN →</button>
+      <div class="div-or">OR</div>
+      <button class="btn-g" onclick="(window._real_doGoogle||window.doGoogle)()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G"/>
+        Continue with Google
+      </button>
+    </div>
+    <!-- SIGNUP FORM -->
+    <div id="sf" style="display:none">
+      <div class="ig"><label for="sn">Full Name</label><input type="text" id="sn" placeholder="Your Name" autocomplete="name"/></div>
+      <div class="ig"><label for="se">Email</label><input type="email" id="se" placeholder="your@email.com" autocomplete="email"/></div>
+      <div class="ig"><label for="sp">Password</label><input type="password" id="sp" placeholder="Min 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"/></div>
+      <button class="btn-m" onclick="(window._real_doSignup||window.doSignup)()">CREATE ACCOUNT →</button>
+      <div class="div-or">OR</div>
+      <button class="btn-g" onclick="(window._real_doGoogle||window.doGoogle)()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G"/>
+        Sign up with Google
+      </button>
+      <div class="bonus-b">🎁 ₹50 Cash + 50 Bonus Points on Signup!</div>
+    </div>
+    <div class="err" id="aerr"></div>
+    <div style="text-align:center;margin-top:12px;font-size:9px;color:var(--muted)">
+      By joining, you agree to our 
+      <span onclick="showPolicy('terms')" style="color:var(--neon);cursor:pointer">Terms & Conditions</span> and 
+      <span onclick="showPolicy('privacy')" style="color:var(--neon);cursor:pointer">Privacy Policy</span>
+    </div>
+  </div>
+</div>
+
+<!-- Terms & Privacy Modal -->
+<div class="mov" id="policy-modal">
+  <div class="modal" style="max-width:480px">
+    <h3 id="policy-title">📋 Terms & Conditions</h3>
+    <div id="policy-body" style="font-size:11px;color:var(--muted);line-height:1.7;max-height:400px;overflow-y:auto"></div>
+    <div style="margin-top:15px"><button class="btn bp" style="width:100%" onclick="cm('policy-modal')">✅ Samajh Gaya</button></div>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div id="main-screen" class="screen" style="display:none">
+  <!-- TOP NAVBAR -->
+  <div id="navbar">
+    <div class="n-logo">🏏 SMART 11</div>
+    <div class="n-right">
+      <div class="n-chip n-pts" onclick="goPage('points')">⭐<span id="npts">0</span></div>
+      <div class="n-chip n-bal" onclick="goPage('wallet')">💰<span id="nbal">₹0</span></div>
+      <div class="n-av" id="nav-av" onclick="goPage('profile')">U</div>
+    </div>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div class="page on" id="page-home">
+    <div class="hero">
+      <h2>🏏 Cricket Prediction Contest!</h2>
+      <p>Apni cricket knowledge use karo &amp; exciting prizes jeeto!</p>
+      <span class="tag">🏆 Knowledge + Points = Prizes!</span>
+    </div>
+
+    <!-- IPL 2026 SCHEDULE TICKER -->
+    <div class="ipl-ticker-wrap" id="ipl-ticker">
+      <div class="ipl-ticker-header">
+        <div class="ipl-ticker-title">&#x1F3CF; TATA IPL 2026 Schedule</div>
+        <div class="ipl-ticker-live"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1s infinite"></span> Live Schedule</div>
+      </div>
+      <div class="ipl-ticker-scroll">
+        <div class="ipl-ticker-inner" id="ipl-ticker-inner">
+          <!-- JS se fill hoga -->
+        </div>
+      </div>
+    </div>
+
+    <!-- AD SLOT 1: Top Banner - managed from Admin > Ad Manager -->
+    <div class="ad-slot ad-slot-banner" id="ad-top" style="display:none"></div>
+
+    <!-- Daily Bonus Section -->
+    <div id="daily-bonus-ui"></div>
+
+    <!-- Live Bonus Section -->
+    <div id="live-bonus-ui"></div>
+
+    <!-- AD SLOT 2: Middle Rectangle - managed from Admin > Ad Manager -->
+    <div class="ad-slot ad-slot-rect" id="ad-mid" style="display:none"></div>
+
+    <div class="sh"><h3>🏆 Live Contests</h3><span class="live-dot">● LIVE</span></div>
+    <div id="pools-list"><div class="empty"><div class="ei">⏳</div><div class="ld"><span></span><span></span><span></span></div></div></div>
+    <div class="sh"><h3>🏅 Top Players</h3></div>
+    <div id="lb-home"></div>
+  </div>
+
+  <!-- QUESTIONS PAGE -->
+  <div class="page" id="page-qs">
+    <div class="sh"><h3>⭐ Bonus Questions</h3><span style="font-size:10px;color:var(--green)">+5 pts each</span></div>
+    <div id="bqs-list"><div class="empty"><div class="ei">🎯</div><p>No bonus questions right now</p></div></div>
+    <div class="sh" style="margin-top:16px"><h3>🎯 Score Predictions</h3><span style="font-size:10px;color:var(--gold)">5-20 pts</span></div>
+    <div id="sqs-list"><div class="empty"><div class="ei">📊</div><p>No score questions yet</p></div></div>
+  </div>
+
+  <!-- LEADERBOARD PAGE -->
+  <div class="page" id="page-lb">
+    <div class="sh"><h3>🏅 Global Leaderboard</h3></div>
+    <div id="lb-full"><div class="empty"><div class="ei">🏅</div><div class="ld"><span></span><span></span><span></span></div></div></div>
+  </div>
+
+  <!-- POINTS PAGE -->
+  <div class="page" id="page-points">
+    <div class="pts-hero">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Total Points</div>
+      <div class="big-p" id="pts-big">0</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">SMART POINTS</div>
+      <div class="pts-grid">
+        <div class="pb"><div class="v" style="color:var(--neon)" id="p-pm">0</div><div class="l">Pre-Match</div></div>
+        <div class="pb"><div class="v" style="color:var(--green)" id="p-bq">0</div><div class="l">Bonus Q</div></div>
+        <div class="pb"><div class="v" style="color:var(--orange)" id="p-lv">0</div><div class="l">Live Time</div></div>
+        <div class="pb"><div class="v" style="color:var(--gold)" id="p-sq">0</div><div class="l">Score Q</div></div>
+      </div>
+    </div>
+    <div class="sh"><h3>📋 How to Earn</h3></div>
+    <div class="info-grid">
+      <div class="ib"><div class="iv" style="color:var(--neon)">10 pts</div><div class="il">Pre-match correct answer</div></div>
+      <div class="ib"><div class="iv" style="color:var(--green)">5 pts</div><div class="il">Bonus question (2 min timer)</div></div>
+      <div class="ib"><div class="iv" style="color:var(--orange)">1 pt</div><div class="il">Every 5 min live</div></div>
+      <div class="ib"><div class="iv" style="color:var(--gold)">5-20 pts</div><div class="il">Score prediction</div></div>
+      <div class="ib"><div class="iv" style="color:var(--gold)">₹10</div><div class="il">Daily login bonus</div></div>
+      <div class="ib"><div class="iv" style="color:var(--purple)">50 pts</div><div class="il">Signup bonus</div></div>
+    </div>
+    <div class="sh"><h3>📜 Points History</h3></div>
+    <div id="pts-hist"><div class="empty"><div class="ei">📋</div><p>No points earned yet</p></div></div>
+  </div>
+
+  <!-- WALLET PAGE -->
+  <div class="page" id="page-wallet">
+    <div class="wc">
+      <div class="lbl">Total Balance</div>
+      <div class="amt" id="wal-amt">₹0.00</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Bonus: <span id="bon-amt" style="color:var(--green)">₹0</span></div>
+    </div>
+    <div class="w-acts">
+      <button class="btn-add" onclick="openDep()">+ Add Money</button>
+      <button class="btn-wd" onclick="openWd()">↑ Withdraw</button>
+    </div>
+    <div class="sh"><h3>📋 Transactions</h3></div>
+    <div id="txn-list"><div class="empty"><div class="ei">📂</div><p>No transactions yet</p></div></div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <div class="prc">
+      <div class="pr-av" id="pr-av">U</div>
+      <div class="pr-name" id="pr-name">User</div>
+      <div class="pr-email" id="pr-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dca9afb9ae9cb9b1bdb5b0f2bfb3b1">[email&#160;protected]</a></div>
+      <div class="pr-stats">
+        <div class="prs"><div class="sv" style="color:var(--purple)" id="st-p">0</div><div class="sl">Points</div></div>
+        <div class="prs"><div class="sv" id="st-b">₹0</div><div class="sl">Balance</div></div>
+        <div class="prs"><div class="sv" id="st-c">0</div><div class="sl">Contests</div></div>
+        <div class="prs"><div class="sv" style="color:var(--green)" id="st-w">0</div><div class="sl">Wins</div></div>
+      </div>
+      <button class="btn-out" onclick="doLogout()">🚪 LOGOUT</button>
+    </div>
+  </div>
+
+
+  <!-- MY CONTESTS PAGE -->
+  <div class="page" id="page-mycontests">
+    <div class="sh"><h3>🏆 Mere Contests</h3></div>
+    <div id="my-contests-list">
+      <div class="empty"><div class="ei">🏏</div><p>Abhi koi contest join nahi kiya</p></div>
+    </div>
+  </div>
+
+  <!-- POLL DETAIL PAGE -->
+  <div class="page" id="page-polldetail">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <button onclick="goPage('mycontests')" style="background:none;border:none;color:var(--neon);font-size:20px;cursor:pointer">&#x2190;</button>
+      <h2 id="pd-title" style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700"></h2>
+    </div>
+    <!-- Poll Stats -->
+    <div id="pd-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;background:var(--bg2);border-radius:9px;padding:3px;margin-bottom:14px">
+      <button id="pd-tab-lb" onclick="pdTab('lb')" style="flex:1;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer">🏅 Leaderboard</button>
+      <button id="pd-tab-my" onclick="pdTab('my')" style="flex:1;padding:8px;border:none;background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer">⭐ Mere Points</button>
+      <button id="pd-tab-prize" onclick="pdTab('prize')" style="flex:1;padding:8px;border:none;background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer">🏆 Prize</button>
+    </div>
+    <!-- Tab content -->
+    <div id="pd-tab-content"></div>
+  </div>
+
+  <!-- AD SLOT 3: Sticky Bottom - managed from Admin > Ad Manager -->
+  <div class="ad-slot ad-slot-sticky" id="ad-sticky" style="display:none"></div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <div id="botnav">
+    <button class="bn on" id="bn-home" onclick="goPage('home')"><div class="bi">🏠</div>Home</button>
+    <button class="bn" id="bn-qs" onclick="goPage('qs')"><div class="bi">❓</div>Questions<span class="bn-badge" id="bq-badge" style="display:none">!</span></button>
+    <button class="bn" id="bn-lb" onclick="goPage('lb')"><div class="bi">🏅</div>Rank</button>
+    <button class="bn" id="bn-points" onclick="goPage('points')"><div class="bi">⭐</div>Points</button>
+    <button class="bn" id="bn-wallet" onclick="goPage('wallet')"><div class="bi">💰</div>Wallet</button>
+    <button class="bn" id="bn-mycontests" onclick="goPage('mycontests')"><div class="bi">🏆</div>Contests<span class="bn-badge" id="mc-badge" style="display:none">!</span></button>
+    <button class="bn" id="bn-profile" onclick="goPage('profile')"><div class="bi">👤</div>Profile</button>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- QUIZ MODAL -->
+<div class="mov" id="quiz-modal">
+  <div class="modal">
+    <h3 id="quiz-title">📝 Pre-Match Quiz</h3>
+    <div class="qp-bar"><div class="qp-fill" id="qpf" style="width:0%"></div></div>
+    <div class="qp-num" id="qpn">0/11</div>
+    <div id="quiz-body"></div>
+    <div id="quiz-done" style="display:none">
+      <div class="quiz-done">
+        <div style="font-size:28px;margin-bottom:4px">🎉</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--green)">Quiz Complete!</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Points milenge: <span id="q-pts" style="color:var(--orange);font-weight:700">Match ke baad</span> ⏳</div>
+      </div>
+      <button class="btn-ok" style="width:100%;padding:12px;font-size:15px" onclick="proceedJoin()">✅ Join Contest →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="mov" id="dep-modal">
+  <div class="modal">
+    <h3>💳 Add Money</h3>
+    <div class="qrb">
+      <svg width="130" height="130" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" style="background:#fff;padding:7px;border-radius:7px">
+        <rect x="8" y="8" width="46" height="46" fill="none" stroke="#000" stroke-width="4"/><rect x="16" y="16" width="30" height="30" fill="#000"/>
+        <rect x="86" y="8" width="46" height="46" fill="none" stroke="#000" stroke-width="4"/><rect x="94" y="16" width="30" height="30" fill="#000"/>
+        <rect x="8" y="86" width="46" height="46" fill="none" stroke="#000" stroke-width="4"/><rect x="16" y="94" width="30" height="30" fill="#000"/>
+        <rect x="86" y="86" width="10" height="10" fill="#000"/><rect x="100" y="86" width="10" height="10" fill="#000"/>
+        <rect x="114" y="86" width="18" height="10" fill="#000"/><rect x="86" y="100" width="10" height="10" fill="#000"/>
+        <rect x="100" y="100" width="10" height="10" fill="#000"/><rect x="86" y="114" width="10" height="18" fill="#000"/>
+        <rect x="100" y="114" width="18" height="10" fill="#000"/><rect x="114" y="100" width="18" height="10" fill="#000"/>
+        <rect x="60" y="8" width="8" height="8" fill="#000"/><rect x="60" y="20" width="8" height="8" fill="#000"/>
+        <rect x="8" y="60" width="48" height="8" fill="#000"/><rect x="60" y="60" width="8" height="8" fill="#000"/>
+        <rect x="72" y="60" width="8" height="8" fill="#000"/>
+      </svg>
+      <div class="upi-id" id="dep-upi-id">📱 Loading...</div>
+      <div style="margin-top:5px"><a id="dep-upi-link" href="#" style="color:var(--neon);font-size:11px;text-decoration:none">📲 Tap to Pay via UPI</a></div>
+      <div class="min-n">⚠️ Minimum Deposit: ₹500</div>
+    </div>
+    <div class="ig"><label for="d-amt">Amount (₹)</label><input type="number" id="d-amt" placeholder="Min ₹500" min="500"/></div>
+    <div class="ig"><label for="d-utr">UTR / Transaction ID</label><input type="text" id="d-utr" placeholder="12-digit UTR Number"/></div>
+    <div class="err" id="d-err"></div>
+    <div class="mbtns">
+      <button class="btn-c" onclick="cm('dep-modal')">Cancel</button>
+      <button class="btn-ok" onclick="submitDep()">Submit →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WITHDRAW MODAL -->
+<div class="mov" id="wd-modal">
+  <div class="modal">
+    <h3>💸 Withdraw</h3>
+    <div class="ig"><label for="w-amt">Amount (₹)</label><input type="number" id="w-amt" placeholder="Min ₹100"/></div>
+    <div class="ig"><label for="w-upi">UPI ID</label><input type="text" id="w-upi" placeholder="your@upi"/></div>
+    <div class="err" id="w-err"></div>
+    <div class="mbtns">
+      <button class="btn-c" onclick="cm('wd-modal')">Cancel</button>
+      <button class="btn-ok" onclick="submitWd()">Request →</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN MODAL -->
+<div class="mov" id="join-modal">
+  <div class="modal">
+    <h3>🏆 Join Contest</h3>
+    <div id="join-det" style="background:rgba(0,212,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;"></div>
+    <div class="err" id="j-err"></div>
+    <div class="mbtns">
+      <button class="btn-c" onclick="cm('join-modal')">Cancel</button>
+      <button class="btn-ok" onclick="confirmJoin()">Pay &amp; Join →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button id="chatbot-btn" onclick="toggleChat()" style="display:none">💬</button>
+<div id="chat-window">
+  <div class="chat-hdr">
+    <span>💬 Smart 11 Support</span>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="chat-msg admin">👋 Hello! I'm Smart 11 Support. How can I help?<div class="cm-time">Just now</div></div>
+    <div class="chat-msg admin">Ask about: points, contests, deposits, or withdrawals!<div class="cm-time">Just now</div></div>
+  </div>
+  <div class="chat-typing" id="chat-typing">Admin is typing...</div>
+  <div class="chat-input-row">
+    <input id="chat-inp" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+    <button class="chat-send" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<button id="inst-btn" onclick="installApp()" style="display:none">📲 Install Smart 11</button>
+
+<!-- iOS Install Banner -->
+<div id="ios-install-banner">
+  <button class="iib-close" onclick="document.getElementById('ios-install-banner').style.display='none'">✕</button>
+  <div class="iib-t">📲 Install Smart 11</div>
+  <div class="iib-s">
+    iOS par install karne ke liye:<br>
+    1. Safari mein <b style="color:var(--neon)">Share button</b> dabao (□↑)<br>
+    2. <b style="color:var(--neon)">"Add to Home Screen"</b> select karo<br>
+    3. <b style="color:var(--neon)">Add</b> dabao ✅
+  </div>
+</div>
+
+<script>
+// ============================================================
+// PWA SETUP v4 — Full Android App Install via Inline SW
+// Works on GitHub Pages, Firebase Hosting, any static host
+// ============================================================
+(function(){
+
+  // High-quality SVG icon
+  var svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+    + '<defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">'
+    + '<stop offset="0%" style="stop-color:#050a14"/>'
+    + '<stop offset="100%" style="stop-color:#0a1f3c"/></linearGradient>'
+    + '<linearGradient id="ng" x1="0%" y1="0%" x2="100%" y2="100%">'
+    + '<stop offset="0%" style="stop-color:#00d4ff"/>'
+    + '<stop offset="100%" style="stop-color:#0099cc"/></linearGradient></defs>'
+    + '<rect width="512" height="512" rx="80" fill="url(#bg)"/>'
+    + '<rect x="20" y="20" width="472" height="472" rx="68" fill="none" stroke="#00d4ff" stroke-width="4" opacity="0.3"/>'
+    + '<text x="256" y="310" font-size="220" text-anchor="middle" font-family="Segoe UI Emoji,Apple Color Emoji,sans-serif">&#x1F3CF;</text>'
+    + '<rect x="60" y="355" width="392" height="80" rx="18" fill="url(#ng)"/>'
+    + '<text x="256" y="415" font-size="50" font-weight="900" fill="#000" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" letter-spacing="3">SMART 11</text>'
+    + '</svg>';
+
+  var iconB64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgIcon)));
+
+  // Generate PNG via canvas (Android NEEDS PNG icons for install)
+  function makePng(size, cb){
+    try{
+      var cv = document.createElement('canvas');
+      cv.width = size; cv.height = size;
+      var ctx = cv.getContext('2d');
+      var img = new Image();
+      img.onload = function(){ ctx.drawImage(img,0,0,size,size); cb(cv.toDataURL('image/png')); };
+      img.onerror = function(){ cb(iconB64); };
+      img.src = iconB64;
+    }catch(e){ cb(iconB64); }
+  }
+
+  // Inline Service Worker code (will be registered via Blob URL)
+  var SW_CODE = '"use strict";\n'
+    + 'var CACHE="smart11-v4";\n'
+    + 'var URLS=["' + location.href + '"];\n'
+    + 'self.addEventListener("install",function(e){\n'
+    + '  self.skipWaiting();\n'
+    + '  e.waitUntil(caches.open(CACHE).then(function(c){\n'
+    + '    return Promise.all(URLS.map(function(u){\n'
+    + '      return c.add(u).catch(function(){});\n'
+    + '    }));\n'
+    + '  }));\n'
+    + '});\n'
+    + 'self.addEventListener("activate",function(e){\n'
+    + '  e.waitUntil(clients.claim().then(function(){\n'
+    + '    return caches.keys().then(function(ks){\n'
+    + '      return Promise.all(ks.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));\n'
+    + '    });\n'
+    + '  }));\n'
+    + '});\n'
+    + 'self.addEventListener("fetch",function(e){\n'
+    + '  if(e.request.method!=="GET")return;\n'
+    + '  e.respondWith(\n'
+    + '    fetch(e.request).then(function(r){\n'
+    + '      var rc=r.clone();\n'
+    + '      caches.open(CACHE).then(function(c){c.put(e.request,rc);});\n'
+    + '      return r;\n'
+    + '    }).catch(function(){\n'
+    + '      return caches.match(e.request).then(function(r){\n'
+    + '        return r||new Response("Smart 11 - Offline",{headers:{"Content-Type":"text/plain"}});\n'
+    + '      });\n'
+    + '    })\n'
+    + '  );\n'
+    + '});';
+
+  function setupPWA(png192, png512){
+    // Build Web App Manifest with PNG icons
+    var pageUrl = location.pathname || '/';
+    var manifest = {
+      name: 'Smart 11',
+      short_name: 'Smart 11',
+      description: 'Cricket Prediction Platform — Cricket knowledge se prizes jeeto!',
+      start_url: pageUrl,
+      scope: pageUrl,
+      display: 'standalone',
+      orientation: 'portrait-primary',
+      background_color: '#050a14',
+      theme_color: '#00d4ff',
+      lang: 'en',
+      categories: ['games','sports'],
+      prefer_related_applications: false,
+      icons: [
+        {src: png192, sizes: '192x192', type: 'image/png', purpose: 'any'},
+        {src: png192, sizes: '192x192', type: 'image/png', purpose: 'maskable'},
+        {src: png512, sizes: '512x512', type: 'image/png', purpose: 'any'},
+        {src: png512, sizes: '512x512', type: 'image/png', purpose: 'maskable'}
+      ]
+    };
+
+    // Inject manifest link
+    var mBlob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+    var mUrl  = URL.createObjectURL(mBlob);
+    var old = document.querySelector('link[rel="manifest"]');
+    if(old) old.remove();
+    var mLink = document.createElement('link');
+    mLink.rel = 'manifest';
+    mLink.href = mUrl;
+    document.head.appendChild(mLink);
+
+    // Register inline Service Worker (Blob URL approach)
+    if('serviceWorker' in navigator){
+      var swBlob = new Blob([SW_CODE], {type:'text/javascript'});
+      var swUrl  = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl, {scope: './'})
+        .then(function(r){ console.log('[Smart11] SW registered, scope:', r.scope); r.update(); })
+        .catch(function(err){
+          console.warn('[Smart11] SW blob failed:', err.message);
+          // Try real sw.js if hosted separately
+          navigator.serviceWorker.register('sw.js').catch(function(){});
+        });
+    }
+  }
+
+  // Generate PNG icons first, then setup PWA
+  makePng(512, function(p512){
+    makePng(192, function(p192){
+      setupPWA(p192, p512);
+    });
+  });
+
+  // iOS meta tags
+  function addMeta(n,c){var m=document.createElement('meta');m.name=n;m.content=c;document.head.appendChild(m);}
+  function addLink(r,h,s){var l=document.createElement('link');l.rel=r;l.href=h;if(s)l.setAttribute('sizes',s);document.head.appendChild(l);}
+  addMeta('apple-mobile-web-app-capable','yes');
+  addMeta('apple-mobile-web-app-status-bar-style','black-translucent');
+  addMeta('apple-mobile-web-app-title','Smart 11');
+  addMeta('mobile-web-app-capable','yes');
+  addMeta('theme-color','#00d4ff');
+  addMeta('msapplication-TileColor','#050a14');
+  addLink('apple-touch-icon', iconB64);
+  addLink('apple-touch-icon', iconB64, '152x152');
+  addLink('apple-touch-icon', iconB64, '167x167');
+  addLink('apple-touch-icon', iconB64, '180x180');
+
+  // ---- Android Install Prompt Handler ----
+  var _dp = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    _dp = e;
+    // Show install button & banner after 3s
+    setTimeout(function(){
+      var btn = document.getElementById('inst-btn');
+      if(btn){ btn.style.display='flex'; btn.style.animation='pulseInstall 2s ease infinite'; }
+      if(!localStorage.getItem('pwa_banner_off')) showInstBanner(false);
+    }, 3000);
+  });
+
+  window.addEventListener('appinstalled', function(){
+    _dp = null;
+    var btn=document.getElementById('inst-btn');
+    if(btn) btn.style.display='none';
+    rmInstBanner();
+    localStorage.setItem('pwa_installed','1');
+    // Show success toast
+    setTimeout(function(){
+      if(window._real_toast) window._real_toast('🎉 Smart 11 App Install Ho Gaya!','var(--green)');
+    }, 500);
+  });
+
+  // Global function for install button click
+  window._real_installApp = function(){
+    var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if(isIos){
+      showInstBanner(true);
+      return;
+    }
+    if(_dp){
+      _dp.prompt();
+      _dp.userChoice.then(function(r){
+        if(r.outcome==='accepted'){ rmInstBanner(); _dp=null; }
+      });
+    } else {
+      // Already installed or prompt not available
+      var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+      if(standalone){
+        if(window._real_toast) window._real_toast('✅ App already installed hai!','var(--green)');
+      } else {
+        showInstBanner(false);
+        if(window._real_toast) window._real_toast('📲 Browser menu > "Add to Home Screen" try karo','var(--orange)');
+      }
+    }
+  };
+
+  function showInstBanner(iosMode){
+    var existing = document.getElementById('pwa-inst-banner');
+    if(existing){ existing.remove(); }
+    var banner = document.createElement('div');
+    banner.id = 'pwa-inst-banner';
+    if(iosMode){
+      banner.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;flex:1">'
+        +'<span style="font-size:32px;flex-shrink:0">📱</span>'
+        +'<div style="flex:1"><div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">Smart 11 App Install Karo (iOS)</div>'
+        +'<div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.7">'
+        +'<b style="color:#00d4ff">Step 1:</b> Neeche Safari Share button dabao <span style="font-size:14px">□↑</span><br>'
+        +'<b style="color:#00d4ff">Step 2:</b> <b>"Add to Home Screen"</b> select karo<br>'
+        +'<b style="color:#00d4ff">Step 3:</b> <b>"Add"</b> dabao — Done! ✅'
+        +'</div></div></div>'
+        +'<button onclick="localStorage.setItem('pwa_banner_off','1');this.parentElement.remove()" '
+        +'style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;flex-shrink:0;padding:0 4px;align-self:flex-start">✕</button>';
+    } else {
+      banner.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex:1">'
+        +'<span style="font-size:32px;flex-shrink:0">📲</span>'
+        +'<div><div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700;color:#fff">Smart 11 App Install Karo!</div>'
+        +'<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px">Android app ki tarah use karo — FREE!</div></div></div>'
+        +'<button onclick="window._real_installApp()" '
+        +'style="background:linear-gradient(135deg,#00d4ff,#0099cc);border:none;border-radius:10px;color:#000;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:800;padding:10px 18px;cursor:pointer;white-space:nowrap;flex-shrink:0;letter-spacing:1px">INSTALL</button>'
+        +'<button onclick="localStorage.setItem('pwa_banner_off','1');this.parentElement.remove()" '
+        +'style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;flex-shrink:0;padding:4px">✕</button>';
+    }
+    banner.style.cssText = 'position:fixed;bottom:70px;left:10px;right:10px;z-index:9999;'
+      +'background:linear-gradient(135deg,rgba(10,22,48,0.98),rgba(0,21,53,0.98));'
+      +'border:1.5px solid rgba(0,212,255,0.5);border-radius:16px;padding:14px 12px;'
+      +'display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+      +'box-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 30px rgba(0,212,255,0.2);'
+      +'animation:slideUpBanner 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+    document.body.appendChild(banner);
+  }
+
+  function rmInstBanner(){
+    var b = document.getElementById('pwa-inst-banner');
+    if(b) b.remove();
+  }
+
+  // Hide install button if already running as standalone app
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(isStandalone){
+    var btn = document.getElementById('inst-btn');
+    if(btn) btn.style.display = 'none';
+    localStorage.setItem('pwa_installed','1');
+  }
+
+  // iOS: show banner after 5 sec if not installed
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS && !isStandalone && !localStorage.getItem('pwa_banner_off')){
+    setTimeout(function(){ showInstBanner(true); }, 5000);
+  }
+
+})();
+</script>
+
+<style>
+@keyframes slideUpBanner{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes pulseInstall{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.5)}50%{box-shadow:0 0 0 10px rgba(0,212,255,0)}}
+</style>
+
+<script>
+
+
+
+// ============================================================
+// FIREBASE CONFIG — No type=module, global scope
+// ============================================================
+var FC = {
+  apiKey:'AIzaSyA5LBLlGP83ol2nQwFrPmfDS3zYMyA5c28',
+  authDomain:'cricket-c3052.firebaseapp.com',
+  projectId:'cricket-c3052',
+  storageBucket:'cricket-c3052.firebasestorage.app',
+  messagingSenderId:'980803711949',
+  appId:'1:980803711949:web:bec8f2b14771b1bbafca84',
+  measurementId:'G-HH8R645S41'
+};
+var app = firebase.initializeApp(FC);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// Keep user logged in even after browser close
+try{auth.setPersistence('local').catch(function(e){console.warn('Persistence:',e);});}catch(pe){console.warn('Persistence setup failed:',pe);}
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+var CU=null, UD=null, SP=null, bqUnsub=null, sqUnsub=null, chatUnsub=null;
+var _bqTimers={}; // bonus question countdown timers
+var APP_CUT_PCT=40;
+var FILL_THRESHOLD=40;
+
+// ============================================================
+// NOTIFICATION SYSTEM
+// ============================================================
+var _lastPollCount = 0;
+var _lastNotifPollIds = {};
+var _notifPopupTimeout = null;
+
+// Show in-app notification popup
+function showNotifPopup(title, body, action, actionLabel){
+  var old = document.getElementById('notif-popup-el');
+  if(old) old.remove();
+  if(_notifPopupTimeout) clearTimeout(_notifPopupTimeout);
+
+  var popup = document.createElement('div');
+  popup.className = 'notif-popup';
+  popup.id = 'notif-popup-el';
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'notif-popup-close';
+  closeBtn.innerHTML = '&#x00D7;';
+  closeBtn.onclick = function(){ popup.remove(); };
+
+  var titleEl = document.createElement('div');
+  titleEl.className = 'notif-popup-title';
+  titleEl.innerHTML = '&#x1F514; ' + title;
+
+  var bodyEl = document.createElement('div');
+  bodyEl.className = 'notif-popup-body';
+  bodyEl.innerHTML = body;
+
+  var actEl = document.createElement('div');
+  actEl.className = 'notif-popup-action';
+
+  if(action){
+    var actBtn = document.createElement('button');
+    actBtn.style.cssText = 'background:linear-gradient(135deg,var(--purple),var(--neon2));color:#fff';
+    actBtn.innerHTML = actionLabel || 'Open';
+    actBtn.onclick = function(){
+      var act = action;
+      if(act){
+        if(act.indexOf('goPage') >= 0){ var pg=act.match(/goPage\(['"](\w+)['"]\)/); if(pg)goPage(pg[1]); }
+        if(act.indexOf('loadPools') >= 0){ cacheClear('polls'); loadPools(); }
+        if(act.indexOf('requestNotifPermission') >= 0){ requestNotifPermission(); }
+      }
+      popup.remove();
+    };
+    actEl.appendChild(actBtn);
+  }
+
+  var dimBtn = document.createElement('button');
+  dimBtn.style.cssText = 'background:var(--bg3);color:var(--muted)';
+  dimBtn.textContent = 'Dismiss';
+  dimBtn.onclick = function(){ popup.remove(); };
+  actEl.appendChild(dimBtn);
+
+  popup.appendChild(closeBtn);
+  popup.appendChild(titleEl);
+  popup.appendChild(bodyEl);
+  popup.appendChild(actEl);
+  document.body.appendChild(popup);
+
+  var dot = document.getElementById('notif-dot');
+  if(dot) dot.style.display = 'block';
+
+  _notifPopupTimeout = setTimeout(function(){
+    var p = document.getElementById('notif-popup-el');
+    if(p) p.remove();
+  }, 8000);
+}
+
+// Show browser push notification
+function showBrowserNotif(title, body, icon){
+  if(Notification && Notification.permission === 'granted'){
+    try{
+      var n = new Notification(title, {
+        body: body,
+        icon: icon || 'https://via.placeholder.com/192x192/00d4ff/000000?text=S11',
+        badge: 'https://via.placeholder.com/96x96/00d4ff/000000?text=S11',
+        tag: 'smart11-notif',
+        requireInteraction: false,
+        silent: false
+      });
+      n.onclick = function(){ window.focus(); n.close(); };
+    } catch(e){}
+  }
+}
+
+// Request notification permission
+window.requestNotifPermission = async function(){
+  var btn = document.getElementById('notif-btn');
+  var status = document.getElementById('notif-status');
+
+  if(!('Notification' in window)){
+    if(status) status.textContent = '&#x274C; Aapka browser notifications support nahi karta';
+    return;
+  }
+
+  if(Notification.permission === 'granted'){
+    if(status) status.innerHTML = '&#x2705; Notifications ON hain!';
+    if(btn) { btn.textContent = '&#x2705; Notifications Enabled'; btn.style.opacity = '0.6'; }
+    return;
+  }
+
+  if(Notification.permission === 'denied'){
+    if(status) status.innerHTML = '&#x26A0;&#xFE0F; Browser settings mein notifications allow karo';
+    return;
+  }
+
+  try{
+    var result = await Notification.requestPermission();
+    if(result === 'granted'){
+      if(status) status.innerHTML = '&#x2705; Notifications ON! Naye contests ka notification milega.';
+      if(btn){ btn.innerHTML = '&#x2705; Notifications Enabled'; btn.style.background = 'linear-gradient(135deg,rgba(0,255,136,0.2),rgba(0,255,136,0.1))'; btn.style.borderColor = 'rgba(0,255,136,0.4)'; btn.style.color = 'var(--green)'; }
+      // Save to Firestore
+      if(CU){
+        try{ await db.collection('users').doc(CU.uid).update({notificationsEnabled: true}); }catch(e){}
+      }
+      showBrowserNotif('Smart 11 &#x1F3CF;', 'Notifications ON! Naye contests aane par inform karenge.', null);
+      toast('&#x1F514; Notifications enabled!', 'var(--purple)');
+    } else {
+      if(status) status.textContent = 'Notifications allow nahi kiye';
+    }
+  } catch(e){
+    if(status) status.textContent = 'Error: ' + e.message;
+  }
+};
+
+// Check and update notification button status
+function updateNotifBtn(){
+  var btn = document.getElementById('notif-btn');
+  var status = document.getElementById('notif-status');
+  if(!btn) return;
+  if(!('Notification' in window)){
+    btn.textContent = '&#x274C; Not Supported';
+    btn.style.opacity = '0.5';
+    return;
+  }
+  if(Notification.permission === 'granted'){
+    btn.innerHTML = '&#x2705; Notifications Enabled';
+    btn.style.background = 'linear-gradient(135deg,rgba(0,255,136,0.2),rgba(0,255,136,0.1))';
+    btn.style.borderColor = 'rgba(0,255,136,0.4)';
+    btn.style.color = 'var(--green)';
+    if(status) status.innerHTML = '&#x2705; Naye contests aane par notify karenge!';
+  } else if(Notification.permission === 'denied'){
+    btn.innerHTML = '&#x26A0;&#xFE0F; Notifications Blocked';
+    btn.style.opacity = '0.6';
+    if(status) status.innerHTML = 'Browser settings > Notifications > Allow karo';
+  }
+}
+
+// Watch admin notifications from Firestore
+function watchAdminNotifications(){
+  db.collection('settings').doc('notification').onSnapshot(function(s){
+    if(!s.exists)return;
+    var d=s.data();
+    var notifKey='notif_seen_'+d.id;
+    if(localStorage.getItem(notifKey))return; // already seen
+    localStorage.setItem(notifKey,'1');
+    // Show notification
+    var icons={'contest':'&#x1F3CF;','bonus':'&#x2B50;','result':'&#x1F3C6;','offer':'&#x1F381;','general':'&#x1F4E2;'};
+    var icon=icons[d.type]||'&#x1F4E2;';
+    showBrowserNotif('Smart 11 - '+d.title, d.body, null);
+    showNotifPopup(icon+' '+d.title, d.body, "goPage('home')", '&#x1F3CF; Open App');
+  },function(err){console.warn('notif watcher:',err.code);});
+}
+
+// Watch for new polls - send notification when admin adds poll
+function watchForNewPolls(){
+  db.collection('polls').where('status','==','active').onSnapshot(function(s){
+    var currentIds = {};
+    s.forEach(function(d){ currentIds[d.id] = d.data(); });
+
+    // First load - just store, don't notify
+    if(Object.keys(_lastNotifPollIds).length === 0){
+      _lastNotifPollIds = currentIds;
+      return;
+    }
+
+    // Check for NEW polls
+    Object.keys(currentIds).forEach(function(id){
+      if(!_lastNotifPollIds[id]){
+        var p = currentIds[id];
+        var msg = '&#x1F3CF; ' + (p.name||'New Contest') + ' | Entry: &#x20B9;' + (p.fee||0) + ' | Prize: &#x20B9;' + (p.prize||0);
+
+        // Browser notification
+        showBrowserNotif(
+          '&#x1F3C6; New Contest Live! - Smart 11',
+          (p.name||'New Contest') + ' | Entry: Rs.' + (p.fee||0) + ' | Prize: Rs.' + (p.prize||0)
+        );
+
+        // In-app popup
+        showNotifPopup(
+          'New Contest Live!',
+          msg,
+          "cacheClear('polls');loadPools();goPage('home')",
+          '&#x1F3CF; Join Now'
+        );
+      }
+    });
+
+    // Check for new Bonus/Instant questions
+    _lastNotifPollIds = currentIds;
+  }, function(err){ console.warn('poll watcher:', err.code); });
+
+  // Watch for new bonus questions
+  db.collection('pollQuestions').where('type','==','bonus').onSnapshot(function(s){
+    var newQ = 0;
+    s.forEach(function(d){
+      var q = d.data();
+      if(!q.settled && (!UD||!UD.bqa||UD.bqa[d.id]===undefined)){
+        newQ++;
+      }
+    });
+    if(newQ > 0){
+      var bqBadge = document.getElementById('bq-badge');
+      if(bqBadge){ bqBadge.textContent = newQ; bqBadge.style.display = 'block'; }
+    }
+  }, function(err){ console.warn('bq watcher:', err.code); });
+}
+
+// ============================================================
+// CACHE SYSTEM - Reads kam karne ke liye
+// ============================================================
+var _cache={};
+function cacheSet(key,data,ttlSeconds){
+  _cache[key]={data:data,exp:Date.now()+(ttlSeconds*1000)};
+}
+function cacheGet(key){
+  var c=_cache[key];
+  if(c&&Date.now()<c.exp)return c.data;
+  return null;
+}
+function cacheClear(key){delete _cache[key];}
+
+// Enable Firestore OFFLINE PERSISTENCE (biggest read saver!)
+// Firestore caches data locally - repeat reads = 0 server reads!
+try{
+  db.enablePersistence({synchronizeTabs:true}).then(function(){
+    console.log('[Smart11] Offline persistence enabled - reads saved!');
+  }).catch(function(err){
+    if(err.code!=='failed-precondition'&&err.code!=='unimplemented'){
+      console.warn('Persistence:',err);
+    }
+  });
+}catch(e){}
+var sN=function(){return String(UD&&UD.name?UD.name:CU&&CU.displayName?CU.displayName:CU&&CU.email?CU.email.split('@')[0]:'User');};
+var sE=function(){return String(CU&&CU.email?CU.email:'');};
+var sU=function(){return String(CU&&CU.uid?CU.uid:'');};
+var WL=function(){return Number(UD&&UD.wallet?UD.wallet:0);};
+var PTS=function(){return Number(UD&&UD.points?UD.points:0);};
+
+// ============================================================
+// TOAST
+// ============================================================
+window._real_toast=function(msg,color){
+  color=color||'var(--neon)';
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=color;t.style.color=color;
+  t.classList.add('show');clearTimeout(window._tt);
+  window._tt=setTimeout(function(){t.classList.remove('show');},3200);
+};
+
+// ============================================================
+// AUTH TAB SWITCH
+// ============================================================
+window._real_stab=function(t){
+  document.getElementById('tl').classList.toggle('on',t==='login');
+  document.getElementById('ts').classList.toggle('on',t==='signup');
+  document.getElementById('lf').style.display=t==='login'?'block':'none';
+  document.getElementById('sf').style.display=t==='signup'?'block':'none';
+  document.getElementById('aerr').textContent='';
+};
+
+// ============================================================
+// EMAIL LOGIN
+// ============================================================
+window._real_doLogin=async function(){
+  var em=document.getElementById('le').value.trim();
+  var pw=document.getElementById('lp').value;
+  var e=document.getElementById('aerr');
+  console.log('[Smart11] doLogin called, em:', em?'set':'empty');
+  if(!em||!pw){e.textContent='Fill all fields';return;}
+  e.textContent='🔄 Logging in...';e.style.color='var(--neon)';
+  try{
+    console.log('[Smart11] calling signInWithEmailAndPassword...');
+    await auth.signInWithEmailAndPassword(em,pw);
+    console.log('[Smart11] signIn success');
+    e.textContent='';
+  }catch(err){
+    e.style.color='var(--red)';
+    var friendlyMsg='';
+    if(err.code==='auth/invalid-credential'||err.code==='auth/wrong-password'||err.code==='auth/user-not-found')friendlyMsg='Invalid email or password';
+    else if(err.code==='auth/invalid-email')friendlyMsg='Invalid email address';
+    else if(err.code==='auth/too-many-requests')friendlyMsg='Too many attempts. Try later.';
+    else if(err.code==='auth/network-request-failed')friendlyMsg='Network error. Check connection.';
+    else friendlyMsg=err.message;
+    e.textContent=friendlyMsg;
+  }
+};
+
+// ============================================================
+// EMAIL SIGNUP
+// ============================================================
+window._real_doSignup=async function(){
+  var nm=document.getElementById('sn').value.trim();
+  var em=document.getElementById('se').value.trim();
+  var pw=document.getElementById('sp').value;
+  var e=document.getElementById('aerr');
+  if(!nm||!em||!pw){e.textContent='Fill all fields';return;}
+  if(pw.length<6){e.textContent='Password min 6 characters';return;}
+  e.textContent='🔄 Creating account...';e.style.color='var(--neon)';
+  try{
+    var c=await auth.createUserWithEmailAndPassword(em,pw);
+    await db.collection('users').doc(c.user.uid).set({
+      name:String(nm),email:String(em),photoURL:'',
+      wallet:50,bonus:50,points:50,
+      pb:{pm:0,bq:0,lv:0,sq:0,su:50},
+      contestsJoined:0,wins:0,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(c.user.uid).collection('txns').add({
+      type:'credit',title:'🎁 Signup Bonus',amount:50,status:'completed',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(c.user.uid).collection('ph').add({
+      type:'su',title:'🎁 Signup Bonus',pts:50,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    e.textContent='';
+    toast('🎉 Welcome! ₹50 + 50 Points added!','var(--green)');
+  }catch(err){
+    e.style.color='var(--red)';
+    e.textContent=err.message;
+  }
+};
+
+// ============================================================
+// GOOGLE LOGIN — signInWithPopup (fixes redirect issues)
+// ============================================================
+window._real_doGoogle=async function(){
+  var e=document.getElementById('aerr');
+  e.textContent='🔄 Opening Google...';e.style.color='var(--neon)';
+  try{
+    var provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    var result=await auth.signInWithPopup(provider);
+    if(result&&result.user){
+      await handleGU(result.user);
+    }
+    e.textContent='';
+  }catch(err){
+    e.style.color='var(--red)';
+    if(err.code==='auth/popup-closed-by-user'||err.code==='auth/cancelled-popup-request'){
+      e.textContent='Popup closed. Try again.';
+    }else if(err.code==='auth/popup-blocked'){
+      // Fallback to redirect if popup is blocked
+      e.textContent='🔄 Popup blocked, redirecting...';
+      setTimeout(async function(){
+        try{ await auth.signInWithRedirect(provider); }catch(e2){}
+      },1000);
+    }else{
+      e.textContent=err.message;
+    }
+  }
+};
+
+// ============================================================
+// GOOGLE USER HANDLER — create doc if new
+// ============================================================
+async function handleGU(u){
+  try{
+    var s=await db.collection('users').doc(u.uid).get();
+    if(!s.exists){
+      var nm=String(u.displayName||u.email.split('@')[0]||'User');
+      var em=String(u.email||'');
+      await db.collection('users').doc(u.uid).set({
+        name:nm,email:em,photoURL:String(u.photoURL||''),
+        wallet:50,bonus:50,points:50,
+        pb:{pm:0,bq:0,lv:0,sq:0,su:50},
+        contestsJoined:0,wins:0,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('users').doc(u.uid).collection('txns').add({
+        type:'credit',title:'🎁 Signup Bonus',amount:50,status:'completed',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('users').doc(u.uid).collection('ph').add({
+        type:'su',title:'🎁 Signup Bonus',pts:50,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('🎉 Welcome! ₹50 + 50 Points!','var(--green)');
+    }
+  }catch(e){console.error('handleGU',e);}
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+window._real_doLogout=async function(){
+  if(bqUnsub)bqUnsub();
+  if(sqUnsub)sqUnsub();
+  if(chatUnsub)chatUnsub();
+  bqUnsub=null;sqUnsub=null;chatUnsub=null;
+  var cb=document.getElementById('chatbot-btn');
+  if(cb)cb.style.display='none';
+  var cw=document.getElementById('chat-window');
+  if(cw)cw.classList.remove('open');
+  await auth.signOut();
+};
+
+// ============================================================
+// AUTH STATE — Auto-login on page load
+// ============================================================
+// Handle redirect result from Google Sign-In
+// Handle redirect result (fallback for popup-blocked scenarios)
+auth.getRedirectResult().then(async function(result){
+  if(result&&result.user){
+    await handleGU(result.user);
+    // onAuthStateChanged will call showMain() automatically
+  }
+}).catch(function(){
+  // No redirect was in progress - normal page load
+});
+
+// ============================================================
+// TRANSACTIONS
+// ============================================================
+async function loadTxns(){
+  var el=document.getElementById('txn-list');
+  if(!el)return;
+  var cached=cacheGet('txns');
+  if(cached){el.innerHTML=cached;return;}
+  try{
+    var s=await db.collection('users').doc(CU.uid).collection('txns').orderBy('createdAt','desc').limit(30).get();
+    if(s.empty){el.innerHTML='<div class="empty"><div class="ei">&#128194;</div><p>No transactions yet</p></div>';return;}
+    el.innerHTML='';
+    s.forEach(function(d){
+      var t=d.data();
+      var dt=t.createdAt&&t.createdAt.toDate?t.createdAt.toDate().toLocaleDateString('en-IN'):'--';
+      var sc=t.status==='completed'?'var(--green)':t.status==='pending'?'var(--orange)':'var(--red)';
+      el.innerHTML+='<div class="ti">'        +'<div class="ti-i"><div class="tt">'+t.title+'</div>'        +'<div class="td">'+dt+' &middot; <span style="color:'+sc+'">'+t.status+'</span></div></div>'        +'<div class="ti-a '+(t.type==='credit'?'cr':'dr')+'">'+(t.type==='credit'?'+':'-')+'&#x20B9;'+t.amount+'</div>'        +'</div>';
+    });
+    cacheSet('txns',el.innerHTML,60); // 1 min cache
+  }catch(e){console.error('loadTxns',e);}
+}
+
+// ============================================================
+// POINTS HISTORY
+// ============================================================
+async function loadPH(){
+  var el=document.getElementById('pts-hist');
+  if(!el)return;
+  try{
+    var s=await db.collection('users').doc(CU.uid).collection('ph').orderBy('createdAt','desc').limit(20).get();
+    if(s.empty){el.innerHTML='<div class="empty"><div class="ei">&#128203;</div><p>No points yet</p></div>';return;}
+    el.innerHTML='';
+    var cc={pm:'var(--neon)',bq:'var(--green)',lv:'var(--orange)',sq:'var(--gold)',su:'var(--purple)'};
+    s.forEach(function(d){
+      var h=d.data();
+      var dt=h.createdAt&&h.createdAt.toDate?h.createdAt.toDate().toLocaleDateString('en-IN'):'--';
+      el.innerHTML+='<div class="ph-item">'        +'<div class="ph-i"><div class="pt">'+h.title+'</div><div class="pd">'+dt+'</div></div>'        +'<div class="ph-p" style="color:'+(cc[h.type]||'var(--purple)')+'">+'+h.pts+'</div>'        +'</div>';
+    });
+  }catch(e){console.error('loadPH',e);}
+}
+
+
+// ============================================================
+// WALLET - DEPOSIT
+// ============================================================
+window._real_openDep=async function(){
+  document.getElementById('d-amt').value='';
+  document.getElementById('d-utr').value='';
+  document.getElementById('d-err').textContent='';
+  // Load dynamic UPI ID from Firestore settings/payment
+  try{
+    var ps=await db.collection('settings').doc('platform').get();
+    var upiId='rishabhsisodiya1998@ybl'; // fallback
+    var minDep=500;
+    if(ps.exists){
+      if(ps.data().upiId)upiId=ps.data().upiId;
+      if(ps.data().minDeposit)minDep=ps.data().minDeposit;
+    }
+    var upiEl=document.getElementById('dep-upi-id');
+    var upiLink=document.getElementById('dep-upi-link');
+    var minNote=document.querySelector('.min-n');
+    if(upiEl)upiEl.textContent='📱 '+upiId;
+    if(upiLink){upiLink.href='upi://pay?pa='+encodeURIComponent(upiId)+'&pn=Smart11';upiLink.textContent='📲 Tap to Pay via UPI';}
+    if(minNote)minNote.textContent='⚠️ Minimum Deposit: ₹'+minDep;
+    // also update min deposit placeholder
+    var dAmt=document.getElementById('d-amt');
+    if(dAmt){dAmt.placeholder='Min ₹'+minDep;dAmt.min=minDep;}
+  }catch(e){}
+  document.getElementById('dep-modal').classList.add('open');
+};
+
+window._real_submitDep=async function(){
+  var amt=parseInt(document.getElementById('d-amt').value);
+  var utr=document.getElementById('d-utr').value.trim();
+  var e=document.getElementById('d-err');
+  if(!amt||amt<500){e.textContent='&#x26A0;&#xFE0F; Minimum deposit &#x20B9;500 hai!';return;}
+  if(!utr||utr.length<6){e.textContent='Valid UTR number daalo (min 6 digits)';return;}
+  try{
+    var ud=UD;
+    if(!ud){var snp=await db.collection('users').doc(CU.uid).get();if(snp.exists)ud=snp.data();}
+    await db.collection('depositRequests').add({
+      uid:sU(),name:String(ud&&ud.name?ud.name:sN()),email:sE(),
+      amount:Number(amt),utr:String(utr),status:'pending',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(CU.uid).collection('txns').add({
+      type:'credit',title:'&#x1F4B3; Deposit &#x20B9;'+amt+' (Pending)',
+      amount:Number(amt),status:'pending',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    cacheClear('txns');
+    document.getElementById('dep-modal').classList.remove('open');
+    toast('&#x2705; Submitted! Admin 30 min mein verify karega.','var(--green)');
+  }catch(e2){document.getElementById('d-err').textContent=e2.message;}
+};
+
+// ============================================================
+// WALLET - WITHDRAW
+// ============================================================
+window._real_openWd=function(){
+  document.getElementById('w-amt').value='';
+  document.getElementById('w-upi').value='';
+  document.getElementById('w-err').textContent='';
+  document.getElementById('wd-modal').classList.add('open');
+};
+
+window._real_submitWd=async function(){
+  var amt=parseInt(document.getElementById('w-amt').value);
+  var upi=document.getElementById('w-upi').value.trim();
+  var e=document.getElementById('w-err');
+  if(!amt||amt<100){e.textContent='Minimum withdrawal &#x20B9;100 hai';return;}
+  if(WL()<amt){e.textContent='Insufficient balance! Aapke paas &#x20B9;'+WL().toFixed(0)+' hain';return;}
+  if(!upi){e.textContent='UPI ID daalo';return;}
+  try{
+    var ud=UD;
+    if(!ud){var snp=await db.collection('users').doc(CU.uid).get();if(snp.exists)ud=snp.data();}
+    await db.collection('withdrawRequests').add({
+      uid:sU(),name:String(ud&&ud.name?ud.name:sN()),email:sE(),
+      amount:Number(amt),upi:String(upi),status:'pending',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(CU.uid).update({
+      wallet:firebase.firestore.FieldValue.increment(-amt)
+    });
+    await db.collection('users').doc(CU.uid).collection('txns').add({
+      type:'debit',title:'&#x1F4B8; Withdrawal &#x20B9;'+amt+' (Pending)',
+      amount:Number(amt),status:'pending',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    UD.wallet=(UD.wallet||0)-amt;
+    updateUI();
+    cacheClear('txns');
+    document.getElementById('wd-modal').classList.remove('open');
+    toast('&#x2705; Withdrawal request submit ho gaya!','var(--green)');
+  }catch(e2){document.getElementById('w-err').textContent=e2.message;}
+};
+
+// ============================================================
+// CHAT
+// ============================================================
+window._real_toggleChat=function(){
+  var w=document.getElementById('chat-window');
+  w.classList.toggle('open');
+  if(w.classList.contains('open')){
+    listenChat();
+    // Glow off
+    var cb=document.getElementById('chatbot-btn');
+    if(cb)cb.style.boxShadow='';
+  }else{
+    if(chatUnsub){chatUnsub();chatUnsub=null;}
+  }
+};
+
+function listenChat(){
+  if(chatUnsub)return;
+  var el=document.getElementById('chat-msgs');
+  chatUnsub=db.collection('chats').orderBy('createdAt','asc').limit(50).onSnapshot(function(s){
+    el.innerHTML='<div class="chat-msg admin">&#x1F44B; Hello! Main Smart 11 Support hoon. Kuch poochna ho?<div class="cm-time">Smart 11</div></div>';
+    var prevCount=0;
+    s.forEach(function(d){
+      var m=d.data();
+      var isAdmin=m.isAdmin;
+      var t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'--';
+      el.innerHTML+='<div class="chat-msg '+(isAdmin?'admin':'user')+'">'
+        +(isAdmin?'<b style="font-size:10px;color:var(--neon)">Support</b><br>':'')+m.text
+        +'<div class="cm-time">'+(isAdmin?'Smart 11 &#xB7; ':((m.name||'Aap')+' &#xB7; '))+t+'</div></div>';
+    });
+    setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
+  },function(err){console.warn('chat:',err.code);});
+}
+
+window._real_sendMsg=async function(){
+  var inp=document.getElementById('chat-inp');
+  var txt=(inp.value||'').trim();
+  if(!txt||!CU)return;
+  inp.value='';
+  try{
+    await db.collection('chats').add({
+      uid:sU(),name:sN(),text:txt,isAdmin:false,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Auto reply check
+    var lower=txt.toLowerCase();
+    var reply='';
+    if(lower.includes('point')||lower.includes('pts'))reply='&#x2B50; Points: Pre-match Q=10pts, Bonus Q=5pts, Live=1pt/5min, Score Q=5-20pts';
+    else if(lower.includes('deposit')||lower.includes('add'))reply='&#x1F4B3; UPI pe pay karo: rishabhsisodiya1998@ybl (Min &#x20B9;500). UTR number submit karo.';
+    else if(lower.includes('withdraw'))reply='&#x1F4B8; Withdrawal 24h mein process hoti hai. Min &#x20B9;100.';
+    else if(lower.includes('join')||lower.includes('contest'))reply='&#x1F3C6; Quiz answer karo &#x2192; Entry fee pay karo &#x2192; Prizes jeeto!';
+    else if(lower.includes('hello')||lower.includes('hi')||lower.includes('help'))reply='&#x1F44B; Hello! Kya help chahiye? Points, deposits, withdrawals ya contests ke baare mein poochho!';
+    else if(lower.includes('result')||lower.includes('settle'))reply='&#x1F4CB; Results admin match ke baad settle karta hai.';
+    if(reply){
+      var ct=document.getElementById('chat-typing');
+      if(ct)ct.style.display='block';
+      setTimeout(async function(){
+        if(ct)ct.style.display='none';
+        try{
+          await db.collection('chats').add({
+            uid:'admin',name:'Smart 11 Bot',text:reply,isAdmin:true,
+            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }catch(e){}
+      },1200);
+    }
+  }catch(e){console.error('sendMsg',e);}
+};
+
+// ============================================================
+// SCORE QUESTION ANSWER
+// ============================================================
+window._real_ansBQ=async function(qid,i){
+  if(!CU||!UD)return;
+  if(UD.bqa&&UD.bqa[qid]!==undefined)return;
+
+  // Stop the countdown timer for this question
+  if(_bqTimers[qid]){ clearInterval(_bqTimers[qid]); delete _bqTimers[qid]; }
+
+  // Immediately update local state
+  if(!UD.bqa)UD.bqa={};
+  UD.bqa[qid]=i;
+
+  // Instantly replace card with "my answer" view
+  var cardEl=document.getElementById('bqc-'+qid);
+  if(cardEl){
+    // Get the question text from existing card
+    var qText=cardEl.querySelector('.qt');
+    var qTextStr=qText?qText.textContent:'';
+    // Get the option text
+    var allBtns=cardEl.querySelectorAll('.opt');
+    var myOptText=allBtns[i]?allBtns[i].textContent:('Option '+(i+1));
+    cardEl.innerHTML='<span class="qbadge qb-b">&#x2B50; BONUS +5 PTS</span>'
+      +'<div class="qt">'+qTextStr+'</div>'
+      +'<div style="background:rgba(0,212,255,0.08);border:1.5px solid rgba(0,212,255,0.35);border-radius:9px;padding:10px 14px;margin-top:8px;display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:18px">✅</span>'
+      +'<div><div style="font-size:10px;color:var(--muted);margin-bottom:2px">Aapka jawab:</div>'
+      +'<div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700;color:var(--neon)">'+myOptText+'</div></div>'
+      +'</div>'
+      +'<div class="ans-b" style="margin-top:8px">&#x2705; Jawab save ho gaya! Result baad mein aayega.</div>';
+  }
+
+  // Update badge count
+  var unanswered=document.querySelectorAll('.bq-card-active .opt:not([disabled])');
+  var bb=document.getElementById('bq-badge');
+  if(bb){
+    var cnt=document.querySelectorAll('#bqs-list .bq-card-active').length - (cardEl?1:0);
+    if(cnt>0){bb.textContent=cnt;bb.style.display='block';}else bb.style.display='none';
+  }
+
+  // Save to Firestore in background
+  try{
+    var upd={};upd['bqa.'+qid]=i;
+    await db.collection('users').doc(CU.uid).update(upd);
+    await db.collection('pollQuestions').doc(qid).collection('entries').add({
+      uid:sU(),name:sN(),answer:i,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('&#x2705; Jawab save! Result match ke baad aayega.','var(--green)');
+  }catch(e){toast('Error saving: '+e.message,'var(--red)');}
+};
+
+window.ansSQClick=function(btn){
+  var qid=btn.getAttribute('data-qid');
+  var idx=parseInt(btn.getAttribute('data-idx'));
+  var pts=parseInt(btn.getAttribute('data-pts'));
+  ansSQ(qid,idx,pts);
+};
+
+window._real_ansSQ=async function(qid,i,pts){
+  if(!CU||!UD)return;
+  if(UD.sqa&&UD.sqa[qid]!==undefined)return;
+  try{
+    var upd={};upd['sqa.'+qid]=i;
+    await db.collection('users').doc(CU.uid).update(upd);
+    await db.collection('pollQuestions').doc(qid).collection('entries').add({
+      uid:sU(),name:sN(),answer:i,potPts:pts,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if(!UD.sqa)UD.sqa={};
+    UD.sqa[qid]=i;
+    toast('&#x2705; Score prediction save! Match ke baad result!','var(--gold)');
+  }catch(e){toast('Error: '+e.message,'var(--red)');}
+};
+
+// ============================================================
+// MY CONTESTS - Joined polls list
+// ============================================================
+async function loadMyContests(){
+  var el=document.getElementById('my-contests-list');
+  if(!el)return;
+  try{
+    var ud=await db.collection('users').doc(CU.uid).get();
+    if(!ud.exists){
+      el.innerHTML='<div class="empty"><div class="ei">&#x1F3CF;</div><p>Koi contest join nahi kiya</p></div>';
+      return;
+    }
+    var joinedPolls=ud.data().joinedPolls||{};
+    var pollIds=Object.keys(joinedPolls);
+    var badge=document.getElementById('mc-badge');
+
+    if(pollIds.length===0){
+      el.innerHTML='<div class="empty"><div class="ei">&#x1F3CF;</div><p>Abhi koi contest join nahi kiya</p><p style="font-size:10px;color:var(--muted);margin-top:5px">Home se contests join karo!</p></div>';
+      if(badge)badge.style.display='none';
+      return;
+    }
+
+    if(badge){badge.textContent=pollIds.length;badge.style.display='inline';}
+    el.innerHTML='';
+
+    for(var j=0;j<pollIds.length;j++){
+      var pid=pollIds[j];
+      var pollData=joinedPolls[pid];
+      var myPts=pollData.points||0;
+      var fee=pollData.fee||0;
+      var pollName=pollData.pollName||'Contest';
+
+      try{
+        var pDoc=await db.collection('polls').doc(pid).get();
+        var p=pDoc.exists?pDoc.data():{};
+        var joined=p.joined||p.users||0;
+        var maxUsers=p.maxUsers||100;
+        var appCut=p.appCutPct||40;
+        var currentPrize=Math.floor(fee*joined*(1-appCut/100));
+        var status=p.status||'active';
+
+        // Get my rank
+        var myRank='--';
+        try{
+          var entries=await db.collection('polls').doc(pid).collection('entries').orderBy('points','desc').get();
+          var rank=1;
+          entries.forEach(function(d){
+            if(d.data().uid===CU.uid)myRank=rank;
+            rank++;
+          });
+        }catch(re){}
+
+        var card=document.createElement('div');
+        card.className='pc';
+        card.style.cursor='pointer';
+        card.setAttribute('data-pid',pid);
+        card.setAttribute('data-pname',encodeURIComponent(pollName));
+        card.addEventListener('click',function(){
+          var p2=this.getAttribute('data-pid');
+          var n2=decodeURIComponent(this.getAttribute('data-pname'));
+          openPollDetail(p2,n2);
+        });
+
+        var statusBadge='<span class="bdg b-'+(status==='active'?'act':'rej')+'">'+status+'</span>';
+        card.innerHTML='<div class="pc-h"><span class="pc-name">&#x1F3CF; '+pollName+'</span>'+statusBadge+'</div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">'
+          +'<div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:7px;padding:7px;text-align:center">'
+          +'<div style="font-size:9px;color:var(--muted)">Mere Points</div>'
+          +'<div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:var(--purple)">'+myPts+'</div></div>'
+          +'<div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:7px;padding:7px;text-align:center">'
+          +'<div style="font-size:9px;color:var(--muted)">Meri Rank</div>'
+          +'<div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:var(--neon)">#'+myRank+'</div></div>'
+          +'<div style="background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:7px;padding:7px;text-align:center">'
+          +'<div style="font-size:9px;color:var(--muted)">Prize</div>'
+          +'<div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">&#x20B9;'+currentPrize.toLocaleString('en-IN')+'</div></div>'
+          +'</div>'
+          +'<div style="font-size:9px;color:var(--muted)">&#x1F4B0; Entry: &#x20B9;'+fee+' | &#x1F465; '+joined+'/'+maxUsers+'</div>'
+          +'<div style="font-size:9px;color:var(--neon);margin-top:4px">Details dekho &rarr;</div>';
+
+        el.appendChild(card);
+      }catch(e){
+        var card2=document.createElement('div');
+        card2.className='pc';
+        card2.innerHTML='<div class="pc-name">&#x1F3CF; '+pollName+'</div><div style="font-size:10px;color:var(--muted)">Loading...</div>';
+        el.appendChild(card2);
+      }
+    }
+  }catch(e){console.error('loadMyContests',e);}
+}
+
+window.openPollDetail=function(pid,pname){
+  _curPollId=pid;
+  document.getElementById('pd-title').textContent=pname;
+  goPage('polldetail');
+  pdTab('lb');
+};
+
+window.pdTab=function(tab){
+  // Update tab buttons
+  ['lb','my','prize'].forEach(function(t){
+    var btn=document.getElementById('pd-tab-'+t);
+    if(btn){
+      if(t===tab){
+        btn.style.background='linear-gradient(135deg,var(--neon2),var(--neon))';
+        btn.style.color='#000';
+      }else{
+        btn.style.background='transparent';
+        btn.style.color='var(--muted)';
+      }
+    }
+  });
+  
+  var el=document.getElementById('pd-tab-content');
+  el.innerHTML='<div class="empty"><div class="ei">⏳</div><div class="ld"><span></span><span></span><span></span></div></div>';
+  
+  if(tab==='lb') loadPollLeaderboard(_curPollId);
+  else if(tab==='my') loadMyPollPoints(_curPollId);
+  else if(tab==='prize') loadPollPrize(_curPollId);
+};
+
+async function loadPollLeaderboard(pid){
+  var el=document.getElementById('pd-tab-content');
+  try{
+    var entries=await db.collection('polls').doc(pid).collection('entries').orderBy('points','desc').limit(20).get();
+    if(entries.empty){el.innerHTML='<div class="empty"><div class="ei">🏅</div><p>Koi entry nahi abhi</p></div>';return;}
+    el.innerHTML='';
+    var rank=1;
+    entries.forEach(function(d){
+      var e=d.data();
+      var isMe=e.uid===CU.uid;
+      var medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
+      el.innerHTML+='<div class="lb-item '+(isMe?'me':'')+'" style="'+(isMe?'border-color:var(--neon);background:rgba(0,212,255,0.06)':'')+'">'
+        +'<div class="lb-r '+(rank<=3?'r'+rank:'')+'">'+medal+'</div>'
+        +'<div class="lb-av">'+(e.name||'U').charAt(0).toUpperCase()+'</div>'
+        +'<div class="lb-info">'
+        +'<div class="lb-name">'+(e.name||'User')+(isMe?' <span style="font-size:9px;color:var(--neon)">(Aap)</span>':'')+'</div>'
+        +'<div class="lb-sub">Poll Points</div>'
+        +'</div>'
+        +'<div class="lb-pts">'+(e.points||0)+'<div style="font-size:9px;color:var(--muted)">pts</div></div>'
+        +'</div>';
+      rank++;
+    });
+  }catch(e){el.innerHTML='<p style="color:var(--red);font-size:11px;padding:10px">Error: '+e.message+'</p>';}
+}
+
+async function loadMyPollPoints(pid){
+  var el=document.getElementById('pd-tab-content');
+  try{
+    var ud=await db.collection('users').doc(CU.uid).get();
+    var jp=ud.data()&&ud.data().joinedPolls&&ud.data().joinedPolls[pid]?ud.data().joinedPolls[pid]:{};
+    
+    var totalPts=jp.points||0;
+    var pmPts=jp.pmPoints||0;
+    var bqPts=jp.bqPoints||0;
+    var iqPts=jp.iqPoints||0;
+    var sqPts=jp.sqPoints||0;
+    
+    el.innerHTML='<div style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(0,212,255,0.08));border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px">'
+      +'<div style="font-size:10px;color:var(--muted);letter-spacing:2px">IS POLL MEIN MERE POINTS</div>'
+      +'<div style="font-family:Rajdhani,sans-serif;font-size:52px;font-weight:700;color:var(--purple);line-height:1">'+totalPts+'</div>'
+      +'<div style="font-size:10px;color:var(--muted)">Poll Points</div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center"><div style="font-family:Rajdhani,sans-serif;font-size:20px;color:var(--neon)">'+pmPts+'</div><div style="font-size:9px;color:var(--muted)">Pre-Match Qs</div></div>'
+      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center"><div style="font-family:Rajdhani,sans-serif;font-size:20px;color:var(--green)">'+bqPts+'</div><div style="font-size:9px;color:var(--muted)">Bonus Qs</div></div>'
+      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center"><div style="font-family:Rajdhani,sans-serif;font-size:20px;color:var(--gold)">'+sqPts+'</div><div style="font-size:9px;color:var(--muted)">Score Qs</div></div>'
+      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center"><div style="font-family:Rajdhani,sans-serif;font-size:20px;color:var(--red)">'+iqPts+'</div><div style="font-size:9px;color:var(--muted)">Instant Qs</div></div>'
+      +'</div>';
+  }catch(e){el.innerHTML='<p style="color:var(--red);font-size:11px;padding:10px">Error: '+e.message+'</p>';}
+}
+
+async function loadPollPrize(pid){
+  var el=document.getElementById('pd-tab-content');
+  try{
+    var pDoc=await db.collection('polls').doc(pid).get();
+    if(!pDoc.exists){el.innerHTML='<p style="color:var(--muted)">Poll not found</p>';return;}
+    var p=pDoc.data();
+    var fee=p.fee||0;
+    var joined=p.joined||0;
+    var maxUsers=p.maxUsers||100;
+    var appCut=p.appCutPct||40;
+    var slabs = await loadPrizeSlabs();
+    var useSlab = slabs && slabs.length > 0;
+    var currentPrize = useSlab ? getPrizeFromSlabs(joined,slabs) : Math.floor(fee*joined*(1-appCut/100));
+    var maxPrize = useSlab ? getMaxPrizeFromSlabs(slabs) : Math.floor(fee*maxUsers*(1-appCut/100));
+    var bd=calcPrizeBreakdown(maxPrize);
+    var medals=['&#x1F947;','&#x1F948;','&#x1F949;','4th','5th','6th','7th','8th','9th','10th'];
+    var placeNames=['1st Place','2nd Place','3rd Place','4th Place','5th Place','6th Place','7th Place','8th Place','9th Place','10th Place'];
+    
+    el.innerHTML='<div style="background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,107,53,0.05));border:1px solid rgba(255,215,0,0.3);border-radius:12px;padding:14px;margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      +'<span style="font-size:11px;color:var(--muted)">Max Prize Pool</span>'
+      +'<span style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:var(--gold)">&#x20B9;'+maxPrize.toLocaleString('en-IN')+'</span>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between">'
+      +'<span style="font-size:10px;color:var(--muted)">Current ('+joined+' players)</span>'
+      +'<span style="font-size:14px;font-weight:700;color:var(--green)">&#x20B9;'+currentPrize.toLocaleString('en-IN')+'</span>'
+      +'</div>'
+      +'</div>';
+
+    // Show slabs if active
+    if(useSlab){
+      el.innerHTML += '<div style="margin-bottom:12px">';
+      el.innerHTML += '<div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:1px">📈 PRIZE SLABS</div>';
+      slabs.forEach(function(sl,si){
+        var isCurrent = (joined >= sl.minUsers) && (si===slabs.length-1 || joined<slabs[si+1].minUsers);
+        var isAchieved = joined >= sl.minUsers;
+        el.innerHTML += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;margin-bottom:5px;'
+          +(isCurrent?'background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,107,53,0.08));border:1px solid rgba(255,215,0,0.4)':isAchieved?'background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.18)':'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)')+'">'
+          +'<span style="font-size:11px;color:'+(isAchieved?'var(--text)':'var(--muted)')+'">👥 '+(si===0?'1':''+sl.minUsers)+'+ players</span>'
+          +'<span style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:'+(isCurrent?'var(--gold)':isAchieved?'var(--green)':'var(--muted)')+'">₹'+sl.prize.toLocaleString('en-IN')+(isCurrent?' ✅':'')+'</span>'
+          +'</div>';
+      });
+      el.innerHTML += '</div>';
+    }
+    
+    el.innerHTML+='<div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;padding:12px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,107,53,0.05));border:1px solid rgba(255,215,0,0.4);border-radius:14px;text-align:center">'
+      +'<div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Kul Prize Pool</div>'
+      +'<div style="font-size:42px;font-weight:700;color:var(--gold);line-height:1.1">&#x20B9;'+maxPrize.toLocaleString('en-IN')+'</div>'
+      +'</div>';
+    
+    el.innerHTML+='<div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:700">PRIZE DISTRIBUTION:</div>';
+
+    var colors=['var(--gold)','#C0C0C0','#CD7F32','var(--neon)','var(--neon)','var(--neon)','var(--neon)','var(--neon)','var(--neon)','var(--neon)'];
+    var bgColors=['rgba(255,215,0,0.08)','rgba(192,192,192,0.06)','rgba(205,127,50,0.06)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)','rgba(0,212,255,0.04)'];
+    
+    bd.forEach(function(amt,i){
+      if(amt<=0||i>=10)return;
+      var isTop3=i<3;
+      el.innerHTML+='<div style="display:flex;align-items:center;justify-content:space-between;padding:'+(isTop3?'14px':'10px')+' 14px;background:'+bgColors[i]+';border:1px solid rgba(255,255,255,0.07);border-radius:'+(isTop3?'12px':'9px')+';margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:'+(isTop3?'26px':'18px')+'">'+medals[i]+'</span>'
+        +'<div>'
+        +'<div style="font-size:'+(isTop3?'13px':'11px')+';font-weight:700;color:var(--text)">'+placeNames[i]+'</div>'
+        +(isTop3?'<div style="font-size:9px;color:var(--muted)">'+(i===0?'50%':i===1?'30%':'10%')+' of prize pool</div>':'')
+        +'</div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+        +'<div style="font-family:Rajdhani,sans-serif;font-size:'+(isTop3?'24px':'18px')+';font-weight:700;color:'+colors[i]+'">&#x20B9;'+amt.toLocaleString('en-IN')+'</div>'
+        +(isTop3?'':('<div style="font-size:9px;color:var(--muted)">each</div>'))
+        +'</div>'
+        +'</div>';
+    });
+    
+    el.innerHTML+='<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:8px;padding:8px">⚠️ Jitne players, utna bada prize! '+( useSlab?'Prize slabs ke hisaab se badhta hai.':'Current prize pool ke hisaab se hain.')+'</div>';
+  }catch(e){el.innerHTML='<p style="color:var(--red);font-size:11px;padding:10px">Error: '+e.message+'</p>';}
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+async function loadLB(elId,lim){
+  var el=document.getElementById(elId);
+  if(!el)return;
+  // Cache leaderboard 2 min
+  var ckey='lb_'+elId+'_'+(lim||20);
+  var cached=cacheGet(ckey);
+  if(cached){el.innerHTML=cached;return;}
+  try{
+    var s=await db.collection('users').orderBy('points','desc').limit(lim||20).get();
+    if(s.empty){el.innerHTML='<div class="empty"><div class="ei">&#127941;</div><p>No players yet</p></div>';return;}
+    el.innerHTML='';
+    var rank=1;
+    s.forEach(function(d){
+      var u=d.data();
+      var isMe=CU&&d.id===CU.uid;
+      var rc=rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
+      var medal=rank<=3?['&#127945;','&#129352;','&#129353;'][rank-1]:rank;
+      var ph=u.photoURL;
+      var av=ph?'<img src="'+ph+'"/>':(u.name||'?').charAt(0).toUpperCase();
+      el.innerHTML+='<div class="lb-item '+(isMe?'me':'')+'">'        +'<div class="lb-r '+rc+'">'+medal+'</div>'        +'<div class="lb-av">'+av+'</div>'        +'<div class="lb-info">'        +'<div class="lb-name">'+(u.name||'User')+(isMe?' <span style="font-size:9px;color:var(--neon)">(You)</span>':'')+'</div>'        +'<div class="lb-sub">Contests: '+(u.contestsJoined||0)+' &middot; Wins: '+(u.wins||0)+'</div>'        +'</div>'        +'<div class="lb-pts">'+(u.points||0)+'<div style="font-size:9px;color:var(--muted);font-weight:400">pts</div></div>'        +'</div>';
+      rank++;
+    });
+    cacheSet(ckey,el.innerHTML,120); // 2 min cache
+  }catch(e){console.error('loadLB',e);}
+}
+
+auth.onAuthStateChanged(async function(u){
+  console.log('[Smart11] authStateChanged, user:', u?u.email:'null');
+  if(u){
+    CU=u;
+    await loadUD();
+    showMain();
+    loadPools();
+    loadAdsFromFirestore();
+    listenBQ();
+    listenSQ();
+    // Load home LB only top 3 (less reads)
+    loadLB('lb-home',3);
+    startLBCheck();
+    renderDailyBonus();
+    startPollCountdowns();
+
+  }else{
+    CU=null;UD=null;
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('main-screen').style.display='none';
+  }
+});
+
+function showMain(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+  var cb=document.getElementById('chatbot-btn');
+  if(cb)cb.style.display='flex';
+}
+
+// ============================================================
+// LOAD USER DATA
+// ============================================================
+async function loadUD(){
+  try{
+    var s=await db.collection('users').doc(CU.uid).get();
+    if(s.exists){
+      UD=s.data();
+    }else{
+      var nm=String(CU.displayName||CU.email.split('@')[0]||'User');
+      var em=String(CU.email||'');
+      var nu={name:nm,email:em,photoURL:String(CU.photoURL||''),
+        wallet:50,bonus:50,points:50,
+        pb:{pm:0,bq:0,lv:0,sq:0,su:50},
+        contestsJoined:0,wins:0,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+      await db.collection('users').doc(CU.uid).set(nu);
+      await db.collection('users').doc(CU.uid).collection('txns').add({
+        type:'credit',title:'🎁 Signup Bonus',amount:50,status:'completed',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('users').doc(CU.uid).collection('ph').add({
+        type:'su',title:'🎁 Signup Bonus',pts:50,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      UD=Object.assign({},nu,{wallet:50,bonus:50,points:50});
+    }
+    updateUI();
+  }catch(e){console.error('loadUD',e);}
+}
+
+// ============================================================
+// UPDATE UI
+// ============================================================
+function updateUI(){
+  if(!UD)return;
+  var b=WL().toFixed(2);
+  var p=PTS();
+  document.getElementById('nbal').textContent='₹'+b;
+  document.getElementById('npts').textContent=p;
+  document.getElementById('wal-amt').textContent='₹'+b;
+  document.getElementById('bon-amt').textContent='₹'+(UD.bonus||0);
+  document.getElementById('pts-big').textContent=p;
+  document.getElementById('p-pm').textContent=(UD.pb&&UD.pb.pm)||0;
+  document.getElementById('p-bq').textContent=(UD.pb&&UD.pb.bq)||0;
+  document.getElementById('p-lv').textContent=(UD.pb&&UD.pb.lv)||0;
+  document.getElementById('p-sq').textContent=(UD.pb&&UD.pb.sq)||0;
+  document.getElementById('st-p').textContent=p;
+  document.getElementById('st-b').textContent='₹'+b;
+  document.getElementById('st-c').textContent=UD.contestsJoined||0;
+  document.getElementById('st-w').textContent=UD.wins||0;
+  var nm=UD.name||'User';
+  var ph=UD.photoURL;
+  var ini=nm.charAt(0).toUpperCase();
+  ['nav-av','pr-av'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(ph){el.innerHTML='<img src="'+ph+'" alt=""/>';}
+    else{el.textContent=ini;}
+  });
+  document.getElementById('pr-name').textContent=nm;
+  document.getElementById('pr-email').textContent=CU&&CU.email?CU.email:'';
+}
+
+// ============================================================
+// AWARD POINTS
+// ============================================================
+async function awardPts(pts,type,title,pollId){
+  if(!CU||!pts)return;
+  try{
+    // Update global user points
+    var upd={points:firebase.firestore.FieldValue.increment(pts)};
+    upd['pb.'+type]=firebase.firestore.FieldValue.increment(pts);
+    await db.collection('users').doc(CU.uid).update(upd);
+
+    // Also update poll leaderboard if pollId given
+    if(pollId&&UD&&UD.joinedPolls&&UD.joinedPolls[pollId]){
+      var pollUpd={};
+      pollUpd['joinedPolls.'+pollId+'.points']=firebase.firestore.FieldValue.increment(pts);
+      pollUpd['joinedPolls.'+pollId+'.lvPoints']=firebase.firestore.FieldValue.increment(pts);
+      await db.collection('users').doc(CU.uid).update(pollUpd);
+      // Update poll entry too
+      try{
+        var pollEntries=await db.collection('polls').doc(pollId).collection('entries').where('uid','==',CU.uid).get();
+        if(!pollEntries.empty){
+          await pollEntries.docs[0].ref.update({
+            points:firebase.firestore.FieldValue.increment(pts),
+            lvPoints:firebase.firestore.FieldValue.increment(pts)
+          });
+        }
+      }catch(pe){}
+    }
+
+    // Points history
+    await db.collection('users').doc(CU.uid).collection('ph').add({
+      type:type,title:title,pts:pts,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update local state
+    UD.points=(UD.points||0)+pts;
+    if(!UD.pb)UD.pb={};
+    UD.pb[type]=(UD.pb[type]||0)+pts;
+    updateUI();
+    toast('&#x2B50; +'+pts+' pts! '+title,'var(--purple)');
+  }catch(e){console.error('awardPts',e);}
+}
+
+// ============================================================
+// DAILY BONUS — ₹10/day, once per day, claim button
+// ============================================================
+function renderDailyBonus(){
+  var el=document.getElementById('daily-bonus-ui');
+  if(!el)return;
+  var today=new Date().toISOString().slice(0,10);
+  var lastKey='db_'+sU();
+  var lastClaim=localStorage.getItem(lastKey)||'';
+  var already=lastClaim===today;
+  el.innerHTML='<div class="dbc">'
+    +'<div class="dbc-title">💰 Daily Login Bonus</div>'
+    +'<div class="dbc-sub">Claim ₹10 free every day just for logging in!</div>'
+    +(already
+      ? '<button class="btn-db" disabled>✅ Claimed Today — Come back tomorrow!</button>'
+      : '<button class="btn-db" onclick="claimDailyBonus()">🎁 Claim ₹10 Now</button>')
+    +'</div>';
+}
+
+window._real_claimDailyBonus=async function(){
+  if(!CU||!UD)return;
+  var today=new Date().toISOString().slice(0,10);
+  var lastKey='db_'+sU();
+  if(localStorage.getItem(lastKey)===today){toast('Already claimed today!','var(--orange)');return;}
+  try{
+    await db.collection('users').doc(CU.uid).update({
+      wallet:firebase.firestore.FieldValue.increment(10),
+      bonus:firebase.firestore.FieldValue.increment(10)
+    });
+    await db.collection('users').doc(CU.uid).collection('txns').add({
+      type:'credit',title:'🎁 Daily Login Bonus',amount:10,status:'completed',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    localStorage.setItem(lastKey,today);
+    UD.wallet=(UD.wallet||0)+10;
+    UD.bonus=(UD.bonus||0)+10;
+    updateUI();
+    renderDailyBonus();
+    toast('🎉 ₹10 Daily Bonus Claimed!','var(--gold)');
+  }catch(e){toast('Error: '+e.message,'var(--red)');}
+};
+
+// ============================================================
+// LIVE BONUS — +1 pt every 5 min during match
+// ============================================================
+function startLBCheck(){checkLB();setInterval(checkLB,60000);}
+
+async function checkLB(){
+  try{
+    var s=await db.collection('settings').doc('liveBonus').get();
+    if(!s.exists||!s.data().active){document.getElementById('live-bonus-ui').innerHTML='';return;}
+    var d=s.data();
+    var now=new Date();
+    var st=d.startTime&&d.startTime.toDate?d.startTime.toDate():null;
+    var en=d.endTime&&d.endTime.toDate?d.endTime.toDate():null;
+    if(!st||!en){document.getElementById('live-bonus-ui').innerHTML='';return;}
+    if(now>=st&&now<=en){
+      var key='lb_'+(d.matchId||'m')+'_'+sU();
+      var last=parseInt(localStorage.getItem(key)||'0');
+      if(Date.now()-last>=5*60*1000){
+        localStorage.setItem(key,Date.now()+'');
+        // Award to global points AND active poll leaderboard
+        var activePollId=d.pollId||null;
+        await awardPts(1,'lv','&#x26A1; Live Bonus (5 min)',activePollId);
+      }
+      renderLBActive(en,d.matchName||'Live Match');
+    }else if(now<st){
+      renderLBSoon(st,d.matchName||'Match');
+    }else{
+      document.getElementById('live-bonus-ui').innerHTML='';
+    }
+  }catch(e){}
+}
+
+function renderLBActive(end,mn){
+  var el=document.getElementById('live-bonus-ui');
+  function tick(){
+    var r=Math.max(0,end-new Date());
+    var m=Math.floor(r/60000);
+    var s=Math.floor((r%60000)/1000);
+    el.innerHTML='<div class="lbc lbc-on"><div class="lbc-title"><span class="live-dot">●</span> Live Bonus Active!</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px">🏏 '+mn+'</div>'
+      +'<div class="lbc-timer">'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'</div>'
+      +'<div class="lbc-info">⭐ +1 point every 5 min you\'re active!</div>'
+      +'<div style="height:4px;background:rgba(0,255,136,0.2);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;background:var(--green);border-radius:2px;transition:width 1s linear;width:'+(Math.min(100,Math.round((r/300000)*100)))+'%"></div></div>'
+      +'</div>';
+    if(r>0)setTimeout(tick,1000);else el.innerHTML='';
+  }
+  tick();
+}
+
+function renderLBSoon(st,mn){
+  var diff=st-new Date();
+  if(diff<0){document.getElementById('live-bonus-ui').innerHTML='';return;}
+  var h=Math.floor(diff/3600000);
+  var m=Math.floor((diff%3600000)/60000);
+  document.getElementById('live-bonus-ui').innerHTML='<div class="lbc lbc-off">'
+    +'<div class="lbc-title">🕐 Live Bonus Starting Soon</div>'
+    +'<div style="font-size:11px;color:var(--muted)">🏏 '+mn+'</div>'
+    +'<div style="font-size:12px;color:var(--orange);margin-top:6px">⏳ Starts in '+h+'h '+m+'m — Stay active!</div>'
+    +'</div>';
+}
+
+// ============================================================
+// POOLS — Admin-only, no dummy pools
+// Prize: App cuts % (default 40%), top 10 winners only
+// 1st=50%, 2nd=30%, 3rd=10%, 4th-10th share remaining 10% equally
+// Prize shown only after fillThreshold% filled (default 40%)
+// ============================================================
+// 4th to 10th share remaining 10% equally (7 places → ~1.43% each)
+
+async function loadPlatformSettings(){
+  try{
+    var st=await db.collection('settings').doc('platform').get();
+    if(st.exists){
+      var d=st.data();
+      if(typeof d.appCutPct==='number')APP_CUT_PCT=d.appCutPct;
+      if(typeof d.fillThreshold==='number')FILL_THRESHOLD=d.fillThreshold;
+    }
+  }catch(e){}
+}
+
+// ============================================================
+// DYNAMIC PRIZE SLABS — Participants ke aadhar par prize badhe
+// Admin Firestore 'settings/prizeSlabs' mein slabs set karta hai
+// Format: [{minUsers:1,prize:500},{minUsers:100,prize:2000},...]
+// ============================================================
+var _prizeSlabs = null; // cached from Firestore
+
+async function loadPrizeSlabs(){
+  if(_prizeSlabs !== null) return _prizeSlabs;
+  try{
+    var s = await db.collection('settings').doc('prizeSlabs').get();
+    if(s.exists && s.data().slabs && s.data().slabs.length){
+      _prizeSlabs = s.data().slabs.slice().sort(function(a,b){return a.minUsers-b.minUsers;});
+    }
+  }catch(e){}
+  if(!_prizeSlabs) _prizeSlabs = []; // empty = fallback to fee-based
+  return _prizeSlabs;
+}
+
+// Get prize for current participant count from slabs
+// Returns fixed prize from highest matching slab, or fee-based if no slabs
+function getPrizeFromSlabs(joined, slabs){
+  if(!slabs || slabs.length === 0) return null; // use fee-based
+  var prize = slabs[0].prize; // minimum slab
+  for(var i = 0; i < slabs.length; i++){
+    if(joined >= slabs[i].minUsers){
+      prize = slabs[i].prize;
+    } else {
+      break;
+    }
+  }
+  return prize;
+}
+
+// Get MAX prize (last/highest slab)
+function getMaxPrizeFromSlabs(slabs){
+  if(!slabs || slabs.length === 0) return null;
+  return slabs[slabs.length - 1].prize;
+}
+
+// Get next slab (to show "X more players needed" message)
+function getNextSlab(joined, slabs){
+  if(!slabs || slabs.length === 0) return null;
+  for(var i = 0; i < slabs.length; i++){
+    if(joined < slabs[i].minUsers) return slabs[i];
+  }
+  return null; // already at max slab
+}
+
+// Compute prize pool from entries collected (fallback if no slabs)
+// prizePool = totalCollected * (1 - appCutPct/100)
+function calcPrizePool(fee, joined, appCut){
+  // appCut = 40 means app keeps 40%, 60% goes to winners
+  var total = fee * joined;
+  return Math.floor(total * (1 - appCut/100));
+}
+
+// Returns prize breakdown array for top 10
+function calcPrizeBreakdown(prizePool){
+  // prizePool = 60% of total collected (40% already removed as app cut)
+  // Distribution of prizePool: 1st=50%, 2nd=30%, 3rd=10%, 4th-10th share remaining 10%
+  var res=[];
+  res.push(Math.floor(prizePool*0.50)); // 1st: 50%
+  res.push(Math.floor(prizePool*0.30)); // 2nd: 30%
+  res.push(Math.floor(prizePool*0.10)); // 3rd: 10%
+  var remaining = prizePool - res[0] - res[1] - res[2]; // 10% left
+  var each = Math.floor(remaining/7); // split among 4th-10th
+  for(var j=0;j<7;j++) res.push(each);
+  return res;
+}
+
+// TIE SPLITTING: when multiple users share the same rank,
+// combine all their prizes and split equally.
+// e.g. 2 users tie for 1st: they split 1st+2nd prize equally.
+// positions: 0-indexed array of user objects [{uid,points,name,...}]
+// returns: [{uid,prize}]
+function calcTiePrizes(rankedUsers, prizePool){
+  var breakdown = calcPrizeBreakdown(prizePool);
+  var result = [];
+  var i = 0;
+  while(i < rankedUsers.length && i < 10){
+    // find how many users tie at this rank
+    var pts = rankedUsers[i].points;
+    var tieEnd = i;
+    while(tieEnd < rankedUsers.length && rankedUsers[tieEnd].points === pts) tieEnd++;
+    var tieCount = tieEnd - i;
+    // sum prizes for all tied positions
+    var totalPrize = 0;
+    for(var k=i; k<Math.min(tieEnd,10); k++) totalPrize += (breakdown[k]||0);
+    var eachPrize = tieCount > 1 ? Math.floor(totalPrize / tieCount) : totalPrize;
+    for(var j=i; j<tieEnd; j++){
+      result.push({uid: rankedUsers[j].uid, name: rankedUsers[j].name, rank: i+1, tieCount: tieCount, prize: eachPrize});
+    }
+    i = tieEnd;
+  }
+  return result;
+}
+
+// ============================================================
+// AD LOADER FROM FIRESTORE
+// ============================================================
+async function loadAdsFromFirestore(){
+  var slots={1:'ad-top',2:'ad-mid',3:'ad-sticky'};
+  for(var s=1;s<=3;s++){
+    try{
+      var doc=await db.collection('settings').doc('ad'+s).get();
+      var el=document.getElementById(slots[s]);
+      if(!el)continue;
+      if(!doc.exists||doc.data().type==='off'){
+        el.style.display='none';continue;
+      }
+      var d=doc.data();
+      var html='';
+      if(d.type==='image'&&d.img){
+        html='<a href="'+(d.link||'#')+'" target="_blank" style="display:block;text-decoration:none">'
+          +'<img src="'+d.img+'" alt="Ad" style="width:100%;max-width:728px;height:auto;border-radius:8px;display:block;margin:0 auto"/>'
+          +'</a>';
+      }else if(d.type==='html'&&d.html){
+        html=d.html;
+      }else if(d.type==='text'&&d.text){
+        html='<a href="'+(d.link||'#')+'" target="_blank" style="display:block;background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(168,85,247,0.08));border:1px solid rgba(0,212,255,0.2);border-radius:10px;padding:12px;text-align:center;color:var(--neon);font-size:13px;font-weight:700;text-decoration:none;font-family:Rajdhani,sans-serif">'+d.text+'</a>';
+      }
+      if(html){
+        if(s===3){
+          var cb=document.createElement('button');
+          cb.className='ad-close-btn';
+          cb.innerHTML='&#x00D7;';
+          cb.onclick=function(){document.getElementById('ad-sticky').classList.add('hidden');};
+          el.innerHTML=html;
+          el.appendChild(cb);
+        }else{
+          el.innerHTML=html;
+        }
+        el.style.display='';
+      }else{
+        el.style.display='none';
+      }
+    }catch(e){
+      var el2=document.getElementById(slots[s]);
+      if(el2)el2.style.display='none';
+    }
+  }
+}
+
+// ============================================================
+// IPL 2026 SCHEDULE TICKER
+// ============================================================
+var IPL_SCHEDULE = [{"no": 1, "date": "28 Mar", "day": "Sat", "time": "7:30 PM", "home": "RCB", "away": "SRH", "venue": "Bengaluru"}, {"no": 2, "date": "29 Mar", "day": "Sun", "time": "7:30 PM", "home": "MI", "away": "KKR", "venue": "Mumbai"}, {"no": 3, "date": "30 Mar", "day": "Mon", "time": "7:30 PM", "home": "RR", "away": "CSK", "venue": "Guwahati"}, {"no": 4, "date": "31 Mar", "day": "Tue", "time": "7:30 PM", "home": "PBKS", "away": "GT", "venue": "New Chandigarh"}, {"no": 5, "date": "01 Apr", "day": "Wed", "time": "7:30 PM", "home": "LSG", "away": "DC", "venue": "Lucknow"}, {"no": 6, "date": "02 Apr", "day": "Thu", "time": "7:30 PM", "home": "KKR", "away": "SRH", "venue": "Kolkata"}, {"no": 7, "date": "03 Apr", "day": "Fri", "time": "7:30 PM", "home": "CSK", "away": "PBKS", "venue": "Chennai"}, {"no": 8, "date": "04 Apr", "day": "Sat", "time": "3:30 PM", "home": "DC", "away": "MI", "venue": "Delhi"}, {"no": 9, "date": "04 Apr", "day": "Sat", "time": "7:30 PM", "home": "GT", "away": "RR", "venue": "Ahmedabad"}, {"no": 10, "date": "05 Apr", "day": "Sun", "time": "3:30 PM", "home": "SRH", "away": "LSG", "venue": "Hyderabad"}, {"no": 11, "date": "05 Apr", "day": "Sun", "time": "7:30 PM", "home": "RCB", "away": "CSK", "venue": "Bengaluru"}, {"no": 12, "date": "06 Apr", "day": "Mon", "time": "7:30 PM", "home": "KKR", "away": "PBKS", "venue": "Kolkata"}, {"no": 13, "date": "07 Apr", "day": "Tue", "time": "7:30 PM", "home": "RR", "away": "MI", "venue": "Guwahati"}, {"no": 14, "date": "08 Apr", "day": "Wed", "time": "7:30 PM", "home": "DC", "away": "GT", "venue": "Delhi"}, {"no": 15, "date": "09 Apr", "day": "Thu", "time": "7:30 PM", "home": "KKR", "away": "LSG", "venue": "Kolkata"}, {"no": 16, "date": "10 Apr", "day": "Fri", "time": "7:30 PM", "home": "RR", "away": "RCB", "venue": "Guwahati"}, {"no": 17, "date": "11 Apr", "day": "Sat", "time": "3:30 PM", "home": "PBKS", "away": "SRH", "venue": "New Chandigarh"}, {"no": 18, "date": "11 Apr", "day": "Sat", "time": "7:30 PM", "home": "CSK", "away": "DC", "venue": "Chennai"}, {"no": 19, "date": "12 Apr", "day": "Sun", "time": "3:30 PM", "home": "LSG", "away": "GT", "venue": "Lucknow"}, {"no": 20, "date": "12 Apr", "day": "Sun", "time": "7:30 PM", "home": "MI", "away": "RCB", "venue": "Mumbai"}];
+
+var TEAM_COLORS = {
+  'RCB':'#EC1C24','SRH':'#FF822A','MI':'#004BA0','KKR':'#3A225D',
+  'RR':'#EA1A85','CSK':'#c8a400','PBKS':'#ED1F27','GT':'#555555',
+  'LSG':'#6faa00','DC':'#0078BC'
+};
+
+var TEAM_FULL = {
+  'RCB':'Royal Challengers Bengaluru','SRH':'Sunrisers Hyderabad',
+  'MI':'Mumbai Indians','KKR':'Kolkata Knight Riders',
+  'RR':'Rajasthan Royals','CSK':'Chennai Super Kings',
+  'PBKS':'Punjab Kings','GT':'Gujarat Titans',
+  'LSG':'Lucknow Super Giants','DC':'Delhi Capitals'
+};
+
+function buildIPLTicker(){
+  var el=document.getElementById('ipl-ticker-inner');
+  if(!el)return;
+  var today=new Date();
+  var html='';
+
+  function mkCard(m){
+    // Parse match date
+    var parts=m.date.split(' ');
+    var monthMap={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    var mDate=new Date(2026, monthMap[parts[1]], parseInt(parts[0]));
+    var isToday=mDate.toDateString()===today.toDateString();
+    var isPast=mDate<today&&!isToday;
+
+    var hc=TEAM_COLORS[m.home]||'#333';
+    var ac=TEAM_COLORS[m.away]||'#333';
+
+    var badge=isToday?'<span class="ipl-today-badge">TODAY</span>':isPast?'<span class="ipl-done-badge">DONE</span>':'';
+
+    return '<div class="ipl-match-card" title="'+( TEAM_FULL[m.home]||m.home)+' vs '+(TEAM_FULL[m.away]||m.away)+' • '+m.venue+'" style="'+(isPast?'opacity:0.5':'')+'opacity:'+(isPast?'0.5':'1')+'">'
+      +'<div class="ipl-match-date">M'+m.no+' • '+m.date+' '+m.day+badge+'</div>'
+      +'<div class="ipl-match-teams">'
+      +'<span class="ipl-team-badge" style="background:'+hc+';color:#fff">'+m.home+'</span>'
+      +'<span class="ipl-vs">VS</span>'
+      +'<span class="ipl-team-badge" style="background:'+ac+';color:#fff">'+m.away+'</span>'
+      +'</div>'
+      +'<div class="ipl-match-venue">&#x1F4CD; '+m.venue+'</div>'
+      +'<div class="ipl-match-time">&#x23F0; '+m.time+'</div>'
+      +'</div>';
+  }
+
+  // Build cards
+  var cards='';
+  IPL_SCHEDULE.forEach(function(m){ cards+=mkCard(m); });
+  // Duplicate for seamless loop
+  html=cards+cards;
+  el.innerHTML=html;
+}
+
+// Build ticker on page load
+document.addEventListener('DOMContentLoaded', function(){
+  buildIPLTicker();
+});
+
+async function loadPools(){
+  var el=document.getElementById('pools-list');
+  // Check cache first (5 min)
+  var cached=cacheGet('polls');
+  if(cached){
+    el.innerHTML='';
+    var shown=0;
+    cached.forEach(function(p){
+      var html=mkPC(p.id,p.data,p.slabs);
+      if(html){el.innerHTML+=html;shown++;}
+    });
+    if(shown===0)el.innerHTML='<div class="empty"><div class="ei">🏏</div><p>Abhi koi upcoming contest nahi hai.<br><span style="font-size:10px">Match 2 din baad shuru hone par dikhai dega!</span></p></div>';
+    return;
+  }
+  el.innerHTML='<div class="empty"><div class="ei">⏳</div><div class="ld"><span></span><span></span><span></span></div></div>';
+  try{
+    await loadPlatformSettings();
+    var slabs = await loadPrizeSlabs();
+    var s=await db.collection('polls').where('status','==','active').get();
+    if(s.empty){
+      el.innerHTML='<div class="empty"><div class="ei">🏏</div><p>No active contests right now.<br><span style="font-size:10px">Admin will add contests soon!</span></p></div>';
+      return;
+    }
+    el.innerHTML='';
+    var pollsData=[];
+    var shown=0;
+    s.forEach(function(d){
+      var p=d.data();
+      pollsData.push({id:d.id,data:p,slabs:slabs});
+      var html=mkPC(d.id,p,slabs);
+      if(html){el.innerHTML+=html;shown++;}
+    });
+    if(shown===0){
+      el.innerHTML='<div class="empty"><div class="ei">🏏</div><p>Abhi koi upcoming contest nahi hai.<br><span style="font-size:10px">Match 2 din baad shuru hone par dikhai dega!</span></p></div>';
+    }
+    cacheSet('polls',pollsData,300); // 5 min cache
+  }catch(e){
+    el.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>'+e.message+'</p></div>';
+  }
+}
+
+// Parse match date+time from poll data into a JS Date object
+// Supports: ISO datetime-local string ("2026-04-04T19:30"), Firestore Timestamp, or "DD Mon YYYY" string
+function getPollMatchDate(p){
+  if(!p.matchDate) return null;
+  try{
+    var md = p.matchDate;
+    // Firestore Timestamp object
+    if(md && typeof md === 'object' && md.toDate) return md.toDate();
+    // ISO string from datetime-local input (e.g. "2026-04-04T19:30")
+    if(typeof md === 'string' && md.indexOf('T') >= 0){
+      var d = new Date(md);
+      if(!isNaN(d.getTime())) return d;
+    }
+    // "DD Mon YYYY" format (e.g. "04 Apr 2026")
+    if(typeof md === 'string'){
+      var monthMap={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      var parts=md.trim().split(' ');
+      var day=parseInt(parts[0]);
+      var mon=monthMap[parts[1]];
+      var yr=parts[2]?parseInt(parts[2]):new Date().getFullYear();
+      var hr=19,min=30;
+      if(p.matchTime){
+        var tp=p.matchTime.trim().toUpperCase();
+        var tparts=tp.replace(/(AM|PM)/g,'').trim().split(':');
+        hr=parseInt(tparts[0]); min=parseInt(tparts[1]||0);
+        if(tp.indexOf('PM')>=0&&hr<12)hr+=12;
+        if(tp.indexOf('AM')>=0&&hr===12)hr=0;
+      }
+      if(!isNaN(day)&&mon!==undefined) return new Date(yr,mon,day,hr,min,0,0);
+    }
+    return null;
+  }catch(e){return null;}
+}
+
+// Get countdown HTML for poll
+function getPollTimerHtml(matchDateObj){
+  if(!matchDateObj) return '';
+  var now=new Date();
+  var diff=matchDateObj-now;
+  var entryDeadline=new Date(matchDateObj.getTime()-30*60*1000); // 30 min before match
+  var entryDiff=entryDeadline-now;
+  if(diff<=0){
+    // Match already started
+    return '<div style="background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.35);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px"><span style="font-size:16px">🔴</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">Match Shuru Ho Gaya</div><div style="font-size:10px;color:var(--muted)">Entry band ho gayi</div></div></div>';
+  }
+  if(entryDiff<=0){
+    // Entry closed (within 30 min of match)
+    var minsLeft=Math.ceil(diff/60000);
+    return '<div style="background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.35);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px"><span style="font-size:16px">🔒</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">Entry Band Ho Gayi!</div><div style="font-size:10px;color:var(--orange)">Match '+minsLeft+' min mein shuru hoga</div></div></div>';
+  }
+  // Show countdown to entry close (match - 30 min)
+  var totalSecs=Math.floor(entryDiff/1000);
+  var days=Math.floor(totalSecs/86400);
+  var hrs=Math.floor((totalSecs%86400)/3600);
+  var mins=Math.floor((totalSecs%3600)/60);
+  var secs=totalSecs%60;
+  var timerStr='';
+  if(days>0) timerStr=days+'d '+String(hrs).padStart(2,'0')+'h '+String(mins).padStart(2,'0')+'m';
+  else if(hrs>0) timerStr=String(hrs).padStart(2,'0')+'h '+String(mins).padStart(2,'0')+'m '+String(secs).padStart(2,'0')+'s';
+  else timerStr=String(mins).padStart(2,'0')+'m '+String(secs).padStart(2,'0')+'s';
+  var color= entryDiff < 3600000 ? 'var(--red)' : entryDiff < 7200000 ? 'var(--orange)' : 'var(--green)';
+  return '<div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.22);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:16px">⏱️</span><div><div style="font-size:10px;color:var(--muted)">Entry Band Hogi</div><div class="poll-countdown" data-deadline="'+entryDeadline.getTime()+'" style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:'+color+'">'+timerStr+'</div></div></div><div style="text-align:right"><div style="font-size:9px;color:var(--muted)">Match Time</div><div style="font-size:11px;font-weight:700;color:var(--neon)">'+formatMatchTime(matchDateObj)+'</div></div></div>';
+}
+
+function formatMatchTime(d){
+  var hr=d.getHours(),mn=d.getMinutes();
+  var ampm=hr>=12?'PM':'AM';
+  hr=hr%12||12;
+  return String(hr)+':'+(mn===0?'00':String(mn).padStart(2,'0'))+' '+ampm+', '+d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+}
+
+// Start live countdown tickers on all poll cards
+function startPollCountdowns(){
+  setInterval(function(){
+    document.querySelectorAll('.poll-countdown').forEach(function(el){
+      var deadline=parseInt(el.getAttribute('data-deadline'));
+      if(!deadline)return;
+      var diff=deadline-Date.now();
+      if(diff<=0){
+        el.textContent='Entry Band!';
+        el.style.color='var(--red)';
+        // Reload polls to show closed state
+        cacheClear('polls');
+        loadPools();
+        return;
+      }
+      var totalSecs=Math.floor(diff/1000);
+      var days=Math.floor(totalSecs/86400);
+      var hrs=Math.floor((totalSecs%86400)/3600);
+      var mins=Math.floor((totalSecs%3600)/60);
+      var secs=totalSecs%60;
+      var str='';
+      if(days>0) str=days+'d '+String(hrs).padStart(2,'0')+'h '+String(mins).padStart(2,'0')+'m';
+      else if(hrs>0) str=String(hrs).padStart(2,'0')+'h '+String(mins).padStart(2,'0')+'m '+String(secs).padStart(2,'0')+'s';
+      else str=String(mins).padStart(2,'0')+'m '+String(secs).padStart(2,'0')+'s';
+      el.textContent=str;
+      if(diff<3600000)el.style.color='var(--red)';
+      else if(diff<7200000)el.style.color='var(--orange)';
+      else el.style.color='var(--green)';
+    });
+  },1000);
+}
+
+function mkPC(id, p, slabs){
+  // ---- 2-DIN PAHLE FILTER ----
+  var matchDateObj = getPollMatchDate(p);
+  if(matchDateObj){
+    var now=new Date();
+    var diff=matchDateObj-now;
+    var twoDays=2*24*60*60*1000;
+    if(diff > twoDays) return ''; // match too far, don't show yet
+    if(diff < -4*60*60*1000) return ''; // match ended 4+ hrs ago, hide
+  }
+
+  var fee=Number(p.fee)||0;
+  var maxUsers=Number(p.maxUsers)||100;
+  var joined=Number(p.joined||p.users||0);
+  var appCut=typeof p.appCutPct==='number'?p.appCutPct:APP_CUT_PCT;
+  var fillPct=maxUsers>0?Math.round((joined/maxUsers)*100):0;
+  var pct=Math.min(100,fillPct);
+  var barColor='linear-gradient(90deg,var(--neon2),var(--neon))';
+
+  // ---- ENTRY CLOSED CHECK ----
+  var isEntryClosed = false;
+  if(matchDateObj){
+    var entryDeadline = new Date(matchDateObj.getTime() - 30*60*1000);
+    if(new Date() >= entryDeadline) isEntryClosed = true;
+  }
+
+  // === SLAB-BASED or FEE-BASED prize ===
+  var useSlab = slabs && slabs.length > 0;
+  var currentPrize, maxPrize;
+  if(useSlab){
+    currentPrize = getPrizeFromSlabs(joined, slabs);
+    maxPrize = getMaxPrizeFromSlabs(slabs);
+  } else {
+    currentPrize = calcPrizePool(fee, joined, appCut);
+    maxPrize = calcPrizePool(fee, maxUsers, appCut);
+  }
+
+  var maxBreakdown=calcPrizeBreakdown(maxPrize);
+  var medals=['&#x1F947;','&#x1F948;','&#x1F949;','4th','5th','6th','7th','8th','9th','10th'];
+
+  // Next slab info
+  var nextSlabHtml = '';
+  if(useSlab){
+    var nextSlab = getNextSlab(joined, slabs);
+    if(nextSlab){
+      var needed = nextSlab.minUsers - joined;
+      nextSlabHtml = '<div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);border-radius:6px;padding:6px 9px;font-size:10px;color:var(--purple);margin-bottom:6px;display:flex;align-items:center;gap:6px">'
+        +'<span style="font-size:14px">🚀</span>'
+        +'<span><b>'+needed+' aur players</b> aaye to prize badhkar <b style="color:var(--gold)">₹'+nextSlab.prize.toLocaleString('en-IN')+'</b> ho jaayega!</span>'
+        +'</div>';
+    } else {
+      nextSlabHtml = '<div style="background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.22);border-radius:6px;padding:6px 9px;font-size:10px;color:var(--green);margin-bottom:6px">🏆 Maximum Prize Pool Reach Ho Gayi! Abhi Join Karo!</div>';
+    }
+  }
+
+  // Prize Slabs table (if slab-based)
+  var slabTableHtml = '';
+  if(useSlab && slabs.length > 0){
+    slabTableHtml += '<div style="margin-bottom:7px">';
+    slabTableHtml += '<div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:5px">📈 PRIZE SLABS (Players → Prize)</div>';
+    slabTableHtml += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+    slabs.forEach(function(sl, si){
+      var isCurrent = (joined >= sl.minUsers) && (si === slabs.length-1 || joined < slabs[si+1].minUsers);
+      slabTableHtml += '<div style="padding:4px 8px;border-radius:5px;font-size:10px;font-weight:700;'
+        +(isCurrent
+          ? 'background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,107,53,0.15));border:1px solid rgba(255,215,0,0.5);color:var(--gold)'
+          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--muted)')
+        +'">'+(si===0?'1':''+sl.minUsers)+'+👥 → ₹'+sl.prize.toLocaleString('en-IN')+(isCurrent?' ✅':'')+'</div>';
+    });
+    slabTableHtml += '</div></div>';
+  }
+
+  var prizeHtml='';
+  prizeHtml+='<div style="background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,107,53,0.05));border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:10px;margin-bottom:8px">';
+  
+  // Current prize (big display)
+  prizeHtml+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+  prizeHtml+='<span style="font-size:10px;color:var(--muted)">🏆 '+(useSlab?'Current Prize':'Max Prize')+'</span>';
+  prizeHtml+='<span style="font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:var(--gold)">₹'+currentPrize.toLocaleString('en-IN')+'</span>';
+  prizeHtml+='</div>';
+
+  if(useSlab && maxPrize > currentPrize){
+    prizeHtml+='<div style="display:flex;justify-content:space-between;margin-bottom:6px">';
+    prizeHtml+='<span style="font-size:9px;color:var(--muted)">Max Possible</span>';
+    prizeHtml+='<span style="font-size:12px;font-weight:700;color:var(--purple)">₹'+maxPrize.toLocaleString('en-IN')+'</span>';
+    prizeHtml+='</div>';
+  } else if(!useSlab && joined > 0){
+    prizeHtml+='<div style="display:flex;justify-content:space-between;margin-bottom:6px">';
+    prizeHtml+='<span style="font-size:9px;color:var(--muted)">Current ('+joined+' players)</span>';
+    prizeHtml+='<span style="font-size:13px;font-weight:700;color:var(--green)">₹'+currentPrize.toLocaleString('en-IN')+'</span>';
+    prizeHtml+='</div>';
+  }
+
+  prizeHtml+='<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px">';
+  prizeHtml+='<div style="width:'+pct+'%;height:100%;background:'+barColor+'"></div></div>';
+  
+  // Slab table
+  prizeHtml += slabTableHtml;
+  
+  // Next slab motivator
+  prizeHtml += nextSlabHtml;
+
+  // Prize breakdown chips
+  prizeHtml+='<div style="display:flex;flex-wrap:wrap;gap:3px">';
+  for(var wi=0;wi<Math.min(10,maxUsers);wi++){
+    var wa=maxBreakdown[wi]||0;
+    if(wa<=0)break;
+    prizeHtml+='<span style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);border-radius:3px;padding:1px 5px;font-size:9px;color:var(--gold)">'+medals[wi]+' ₹'+wa.toLocaleString('en-IN')+'</span>';
+  }
+  prizeHtml+='</div>';
+  if(useSlab){
+    prizeHtml+='<div style="font-size:8px;color:var(--muted);margin-top:4px">⬆️ Jitne zyada players join karenge, utna bada prize milega!</div>';
+  } else {
+    prizeHtml+='<div style="font-size:8px;color:var(--muted);margin-top:4px">⬆️ Prize pool depends on total participation!</div>';
+  }
+  prizeHtml+='</div>';
+
+  var alreadyJoined=UD&&UD.joinedPolls&&UD.joinedPolls[id];
+  var qReady=(p.questions||[]).length>=11;
+  var pnameEnc=encodeURIComponent(p.name||'Contest');
+
+  // Team names from poll data
+  var teamA = p.teamA || p.team1 || 'Team A';
+  var teamB = p.teamB || p.team2 || 'Team B';
+
+  var html='<div class="pc">';
+
+  // Match header with teams
+  html+='<div class="pc-h"><span class="pc-name">🏏 '+(p.name||'Contest')+'</span><span class="pc-fee" style="font-size:13px;padding:4px 10px">₹'+fee+'</span></div>';
+
+  // Teams display
+  if(p.teamA||p.teamB||p.team1||p.team2){
+    var hc=TEAM_COLORS[teamA]||'#0078BC';
+    var ac=TEAM_COLORS[teamB]||'#EC1C24';
+    html+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 0;margin-bottom:8px;background:rgba(0,212,255,0.03);border-radius:8px;border:1px solid rgba(0,212,255,0.1)">'
+      +'<div style="text-align:center"><span style="background:'+hc+';color:#fff;font-weight:700;font-size:15px;padding:5px 12px;border-radius:7px;font-family:Rajdhani,sans-serif">'+teamA+'</span><div style="font-size:9px;color:var(--muted);margin-top:3px">'+(TEAM_FULL[teamA]||teamA)+'</div></div>'
+      +'<span style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:var(--muted)">VS</span>'
+      +'<div style="text-align:center"><span style="background:'+ac+';color:#fff;font-weight:700;font-size:15px;padding:5px 12px;border-radius:7px;font-family:Rajdhani,sans-serif">'+teamB+'</span><div style="font-size:9px;color:var(--muted);margin-top:3px">'+(TEAM_FULL[teamB]||teamB)+'</div></div>'
+      +'</div>';
+  }
+
+  if(p.description)html+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px">'+p.description+'</div>';
+
+  // Countdown timer
+  html += getPollTimerHtml(matchDateObj);
+
+  html+='<div class="pc-stats"><span>👥 <b>'+joined+'</b> Joined</span><span>🎯 <b>'+maxUsers+'</b> Max</span><span>📊 <b>'+fillPct+'%</b> Full</span></div>';
+  html+='<div class="prog"><div class="prog-f" style="width:'+pct+'%;background:'+barColor+'"></div></div>';
+  html+=prizeHtml;
+
+  if(isEntryClosed && !alreadyJoined){
+    // Entry closed - 30 min rule
+    html+='<div style="background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.35);border-radius:8px;padding:8px 12px;margin-bottom:8px;text-align:center;color:var(--red);font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700">🔒 ENTRY BAND HO GAYI — Match Shuru Hone Wala Hai!</div>';
+    html+='<button class="btn-j" disabled style="opacity:.5;font-size:16px;padding:13px">🔒 ENTRY CLOSED</button>';
+  } else if(alreadyJoined){
+    html+='<div class="pc-ptag" style="background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.3);color:var(--green)">✅ Aap join hain!</div>';
+    html+='<button class="btn-j" style="background:linear-gradient(135deg,#006600,var(--green));font-size:16px;padding:13px;font-size:18px" data-pid="'+id+'" data-pname="'+pnameEnc+'" onclick="pdClick(this)">📋 DETAILS DEKHO</button>';
+  }else if(!qReady){
+    html+='<div class="pc-ptag" style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.3);color:var(--orange)">⏳ Setup ho raha hai ('+(p.questions||[]).length+'/11)</div>';
+    html+='<button class="btn-j" disabled style="opacity:.5;font-size:16px;padding:13px">⏳ COMING SOON</button>';
+  }else{
+    html+='<div class="pc-ptag">📝 11 Questions + Join & Test Your Cricket Knowledge!</div>';
+    html+='<button class="btn-j big-join" data-pid="'+id+'" data-pname="'+pnameEnc+'" data-fee="'+fee+'" data-prize="'+maxPrize+'" onclick="sqClick(this)">🏏 JOIN NOW &nbsp;|&nbsp; ENTRY FEE ₹'+fee+'</button>';
+  }
+  html+='</div>';
+  return html;
+}
+
+window.pdClick=function(b){openPollDetail(b.dataset.pid,decodeURIComponent(b.dataset.pname));};
+window.sqClick=function(b){startQuiz(b.dataset.pid,decodeURIComponent(b.dataset.pname),parseInt(b.dataset.fee),parseInt(b.dataset.prize));};
+
+
+// ============================================================
+// PRE-MATCH QUIZ — 11 questions, progress bar, no retake
+// ============================================================
+var QD={};
+window._real_startQuiz=async function(pid,pname,fee,prize){
+  SP={id:pid,name:pname,fee:fee,prize:prize};
+  var done=localStorage.getItem('qz_'+pid+'_'+(CU&&CU.uid?CU.uid:''));
+  if(done){openJoinDlg();return;}
+  try{
+    var qs=[];
+    var ps=await db.collection('polls').doc(pid).get();
+    var pollData = ps.exists ? ps.data() : {};
+
+    // Check entry deadline (30 min before match)
+    var mDateObj = getPollMatchDate(pollData);
+    if(mDateObj){
+      var entryDeadline = new Date(mDateObj.getTime() - 30*60*1000);
+      if(new Date() >= entryDeadline){
+        toast('⏰ Entry band ho gayi! Match 30 min mein shuru hoga.','var(--red)');
+        return;
+      }
+    }
+
+    // Get team names for dynamic questions
+    var tA = pollData.teamA || pollData.team1 || '';
+    var tB = pollData.teamB || pollData.team2 || '';
+    SP.teamA = tA; SP.teamB = tB;
+
+    if(pollData.questions&&pollData.questions.length){
+      qs=pollData.questions;
+      // Replace Team A / Team B placeholders in questions with actual team names
+      if(tA && tB){
+        qs = qs.map(function(q){
+          var nq = JSON.parse(JSON.stringify(q));
+          nq.q = (nq.q||'').replace(/Team A/g,tA).replace(/Team B/g,tB);
+          nq.opts = (nq.opts||[]).map(function(o){ return o.replace(/Team A/g,tA).replace(/Team B/g,tB); });
+          return nq;
+        });
+      }
+    }
+    if(!qs.length) qs=defQs(pname, tA, tB);
+    QD={pid:pid,pname:pname,qs:qs.slice(0,11),cur:0,score:0,ans:{}};
+    document.getElementById('quiz-title').textContent='🏏 '+(tA&&tB ? tA+' vs '+tB : pname);
+    document.getElementById('quiz-done').style.display='none';
+    renderQQ();
+    document.getElementById('quiz-modal').classList.add('open');
+  }catch(e){openJoinDlg();}
+};
+
+function defQs(n, tA, tB){
+  var a = tA || 'Team A';
+  var b = tB || 'Team B';
+  return[
+    {q:'Toss kaun jeetega?',opts:[a, b,'No Prediction'],correct:null,pts:10},
+    {q:'Pehle batting kaun karega?',opts:[a, b,'Toss Winner'],correct:null,pts:10},
+    {q:'Kya century score hogi?',opts:['Haan','Nahi'],correct:null,pts:10},
+    {q:'Match mein total sixes?',opts:['0-5','6-10','11-15','15+'],correct:null,pts:10},
+    {q:'Pehle over mein wicket girega?',opts:['Haan','Nahi'],correct:null,pts:10},
+    {q:'Match kaun jeetega?',opts:[a, b,'Super Over'],correct:null,pts:10},
+    {q:'Top scorer kaun hoga?',opts:['Opener','#3-#5 batsman','#6+ batsman'],correct:null,pts:10},
+    {q:'Match mein total wickets?',opts:['10 se kam','10-15','16-20','All out (20)'],correct:null,pts:10},
+    {q:'Kya '+a+' 150+ score karega?',opts:['Haan','Nahi'],correct:null,pts:10},
+    {q:'Man of the Match kaun hoga?',opts:['Batsman','Bowler','All-rounder'],correct:null,pts:10},
+    {q:'Kya '+b+' last over mein 15+ run karega?',opts:['Haan','Nahi'],correct:null,pts:10}
+  ];
+}
+
+function renderQQ(){
+  var q=QD.qs[QD.cur];
+  var tot=QD.qs.length;
+  document.getElementById('qpf').style.width=((QD.cur/tot)*100)+'%';
+  document.getElementById('qpn').textContent=(QD.cur+1)+'/'+tot;
+  if(!q){finishQuiz();return;}
+  var ans=QD.ans[QD.cur];
+
+  // Timer check
+  var isLocked=false;
+  var timerHtml='';
+  if(q.deadline){
+    var dl=q.deadline.toDate?q.deadline.toDate():new Date(q.deadline);
+    var rem=dl-new Date();
+    if(rem<=0){
+      isLocked=true;
+      timerHtml='<div style="background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:7px;padding:6px 10px;font-size:10px;color:var(--red);margin-bottom:8px">🔒 Answer time khatam — locked!</div>';
+    }else{
+      var tm=Math.floor(rem/60000);var ts=Math.floor((rem%60000)/1000);
+      timerHtml='<div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.25);border-radius:7px;padding:6px 10px;font-size:10px;color:var(--orange);margin-bottom:8px">⏰ '+tm+'m '+ts+'s mein band hoga</div>';
+    }
+  }
+
+  var opts=q.opts.map(function(o,i){
+    var cls='opt';
+    var locked=isLocked||(ans!==undefined);
+    if(ans!==undefined){
+      if(q.correct===null||q.correct===undefined)cls+=i===ans?' sel':'';
+      else if(i===q.correct)cls+=' ok';
+      else if(i===ans)cls+=' no';
+    }
+    return'<button class="'+cls+'" onclick="pickOpt('+i+')" '+(locked?'disabled':'')+'>'+o+'</button>';
+  }).join('');
+  var fb='';
+  if(isLocked&&ans===undefined){
+    fb='<div class="ans-b" style="border-color:var(--red);color:var(--red)">🔒 Answer band ho gaya</div>';
+  }else if(ans!==undefined){
+    if(q.correct===null||q.correct===undefined)fb='<div class="ans-b">✅ Saved +'+(q.pts||10)+' pts</div>';
+    else if(ans===q.correct)fb='<div class="ans-b">🎉 Correct! +'+(q.pts||10)+' pts</div>';
+    else fb='<div class="ans-b">❌ Wrong — result known after match</div>';
+  }
+  document.getElementById('quiz-body').innerHTML='<div class="qc"><span class="qbadge qb-p">PRE-MATCH Q'+(QD.cur+1)+'</span>'
+    +'<div class="qt">'+q.q+'</div><div class="qmeta">⭐ '+(q.pts||10)+' pts</div>'
+    +timerHtml
+    +'<div class="opts">'+opts+'</div>'+fb+'</div>';
+}
+
+window._real_pickOpt=async function(i){
+  var q=QD.qs[QD.cur];
+  if(QD.ans[QD.cur]!==undefined)return;
+  // Check deadline
+  if(q.deadline){
+    var dl=q.deadline.toDate?q.deadline.toDate():new Date(q.deadline);
+    if(new Date()>dl){toast('⏰ Answer time khatam ho gaya!','var(--red)');return;}
+  }
+  QD.ans[QD.cur]=i;
+  // Save answer to Firestore (in poll entry) - NO points yet
+  // Points will be given by admin after match when they settle answers
+  try{
+    var ansUpdate={};
+    ansUpdate['pmAns_'+QD.cur]=i;
+    // Store answers in user doc for tracking
+    await db.collection('users').doc(CU.uid).update(ansUpdate);
+  }catch(e){}
+  // Just show saved message - no points
+  renderQQ();
+  setTimeout(function(){QD.cur++;if(QD.cur>=QD.qs.length)finishQuiz();else renderQQ();},1100);
+};
+
+function finishQuiz(){
+  document.getElementById('quiz-body').innerHTML='';
+  document.getElementById('quiz-done').style.display='block';
+  document.getElementById('qpf').style.width='100%';
+  document.getElementById('qpn').textContent=QD.qs.length+'/'+QD.qs.length;
+  document.getElementById('q-pts').textContent='Match ke baad';
+  localStorage.setItem('qz_'+QD.pid+'_'+(CU&&CU.uid?CU.uid:''),'1');
+}
+
+window._real_proceedJoin=function(){cm('quiz-modal');openJoinDlg();};
+
+function openJoinDlg(){
+  if(!SP)return;
+  document.getElementById('join-det').innerHTML=
+    '<b style="font-family:\'Rajdhani\',sans-serif;font-size:15px">'+SP.name+'</b>'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:7px"><span>Entry Fee</span><span style="color:var(--red);font-weight:700">-₹'+SP.fee+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px"><span>Prize</span><span style="color:var(--gold);font-weight:700">₹'+(SP.prize?SP.prize.toLocaleString():0)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px"><span>Your Balance</span><span style="color:var(--green);font-weight:700">₹'+WL().toFixed(2)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px"><span>Your Points</span><span style="color:var(--purple);font-weight:700">⭐ '+PTS()+'</span></div>';
+  document.getElementById('j-err').textContent='';
+  document.getElementById('join-modal').classList.add('open');
+}
+
+window._real_confirmJoin=async function(){
+  if(!SP||!CU)return;
+  // Double-check entry deadline
+  try{
+    var ps2=await db.collection('polls').doc(SP.id).get();
+    if(ps2.exists){
+      var pd2=ps2.data();
+      var mDate2=getPollMatchDate(pd2);
+      if(mDate2){
+        var entryDL=new Date(mDate2.getTime()-30*60*1000);
+        if(new Date()>=entryDL){
+          document.getElementById('j-err').innerHTML='<span style="color:var(--red)">⏰ Entry band ho gayi! Match 30 min mein shuru hoga.</span>';
+          return;
+        }
+      }
+    }
+  }catch(e2){}
+  var bal=WL();
+  var fee=SP.fee;
+  if(bal<fee){
+    var need=fee-bal;
+    document.getElementById('j-err').innerHTML='<span style="color:var(--red)">&#x274C; Balance kam hai!</span><br>'
+      +'<span style="font-size:10px">Aapke paas: <b style="color:var(--gold)">&#x20B9;'+bal.toFixed(0)+'</b> | Chahiye: <b style="color:var(--neon)">&#x20B9;'+fee+'</b></span><br>'
+      +'<span style="font-size:10px;color:var(--orange)">&#x20B9;'+need+' aur chahiye — Wallet mein add karo!</span>';
+    return;
+  }
+  try{
+    await db.collection('users').doc(CU.uid).update({
+      wallet:firebase.firestore.FieldValue.increment(-SP.fee),
+      contestsJoined:firebase.firestore.FieldValue.increment(1)
+    });
+    // Add entry + increment joined count on pool
+    await db.collection('polls').doc(SP.id).collection('entries').add({
+      uid:sU(),name:sN(),points:0,fee:SP.fee,pmPoints:0,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Track joined polls in user doc
+    var joinUpd={};
+    joinUpd['joinedPolls.'+SP.id+'.pollName']=SP.name;
+    joinUpd['joinedPolls.'+SP.id+'.points']=0;
+    joinUpd['joinedPolls.'+SP.id+'.fee']=SP.fee;
+    joinUpd['joinedPolls.'+SP.id+'.joinedAt']=firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('users').doc(CU.uid).update(joinUpd);
+    await db.collection('polls').doc(SP.id).update({
+      joined:firebase.firestore.FieldValue.increment(1)
+    }).catch(function(){});
+    await db.collection('users').doc(CU.uid).collection('txns').add({
+      type:'debit',title:'🏏 Joined: '+SP.name,amount:Number(SP.fee),status:'completed',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    UD.wallet=(UD.wallet||0)-SP.fee;
+    UD.contestsJoined=(UD.contestsJoined||0)+1;
+    updateUI();cm('join-modal');
+    loadPools();
+    toast('🎉 Joined! Good luck!','var(--green)');
+  }catch(e){document.getElementById('j-err').textContent=e.message;}
+};
+
+// ============================================================
+// BONUS QUESTIONS — 2 min timer, phir hide, sirf apna jawab dikhe
+// ============================================================
+
+// Active BQ timers (declared globally above)
+
+function clearAllBQTimers(){
+  Object.keys(_bqTimers).forEach(function(k){
+    clearInterval(_bqTimers[k]);
+  });
+  _bqTimers = {};
+}
+
+function listenBQ(){
+  if(bqUnsub)bqUnsub();
+  clearAllBQTimers();
+  bqUnsub=db.collection('pollQuestions').where('type','==','bonus').onSnapshot(function(s){
+    var el=document.getElementById('bqs-list');
+    var now = new Date();
+    var count=0;
+    var visibleQuestions = []; // only show valid ones
+
+    s.forEach(function(d){
+      var q=d.data();
+      var totalSecs = q.timerSeconds || 120; // always 2 minutes
+      var ans = UD&&UD.bqa&&UD.bqa[d.id]!==undefined ? UD.bqa[d.id] : undefined;
+
+      // Calculate deadline from createdAt
+      var deadline = null;
+      if(q.createdAt){
+        var created = q.createdAt.toDate ? q.createdAt.toDate() : new Date(q.createdAt);
+        deadline = new Date(created.getTime() + totalSecs*1000);
+      }
+
+      var expired = deadline && now > deadline;
+
+      // RULES:
+      // 1. If time expired AND user did NOT answer → completely hide (don't show at all)
+      // 2. If time expired AND user answered → show only their own answer + result (if settled)
+      // 3. If time NOT expired → show question with countdown timer
+      // 4. Never show other users' answers (handled by only using UD.bqa for THIS user)
+
+      if(expired && ans === undefined) return; // skip — user didn't answer in time
+
+      if(!expired && ans === undefined) count++; // unanswered active question
+
+      visibleQuestions.push({id: d.id, q: q, ans: ans, deadline: deadline, expired: expired, totalSecs: totalSecs});
+    });
+
+    el.innerHTML='';
+
+    if(visibleQuestions.length === 0){
+      el.innerHTML='<div class="empty"><div class="ei">&#x1F3AF;</div><p>Abhi koi bonus question nahi hai</p></div>';
+      document.getElementById('bq-badge').style.display='none';
+      return;
+    }
+
+    visibleQuestions.forEach(function(item){
+      el.innerHTML += mkBQ(item.id, item.q, item.ans, item.deadline, item.expired, item.totalSecs);
+    });
+
+    // Start live countdown timers for each visible unanswered question
+    visibleQuestions.forEach(function(item){
+      if(!item.expired && item.ans === undefined && item.deadline){
+        startBQCountdown(item.id, item.deadline, item.totalSecs);
+      }
+    });
+
+    var bb=document.getElementById('bq-badge');
+    if(count>0){bb.textContent=count;bb.style.display='block';}
+    else bb.style.display='none';
+  },function(err){
+    console.warn('[BQ] snapshot error:',err.code);
+  });
+}
+
+// Live countdown for a single bonus question card
+function startBQCountdown(qid, deadline, totalSecs){
+  // Clear any existing timer for this qid
+  if(_bqTimers[qid]) clearInterval(_bqTimers[qid]);
+
+  _bqTimers[qid] = setInterval(function(){
+    var rem = Math.max(0, deadline - new Date());
+    var pct = Math.round((rem / (totalSecs * 1000)) * 100);
+    var tm = Math.floor(rem/60000);
+    var ts = Math.floor((rem%60000)/1000);
+
+    // Update SVG circle
+    var circleEl = document.getElementById('bqc-circle-'+qid);
+    var timeEl   = document.getElementById('bqc-time-'+qid);
+    var cardEl   = document.getElementById('bqc-'+qid);
+
+    if(!cardEl){
+      // Card removed from DOM, stop timer
+      clearInterval(_bqTimers[qid]);
+      delete _bqTimers[qid];
+      return;
+    }
+
+    if(rem <= 0){
+      // Time up! Remove card from DOM (user didn't answer)
+      clearInterval(_bqTimers[qid]);
+      delete _bqTimers[qid];
+      // Check if user answered - if not, remove card
+      var userAns = UD&&UD.bqa&&UD.bqa[qid]!==undefined ? UD.bqa[qid] : undefined;
+      if(userAns === undefined){
+        cardEl.style.transition = 'opacity 0.5s, transform 0.5s';
+        cardEl.style.opacity = '0';
+        cardEl.style.transform = 'translateY(-10px)';
+        setTimeout(function(){
+          if(cardEl.parentNode) cardEl.parentNode.removeChild(cardEl);
+          // Update badge count
+          var remaining = document.querySelectorAll('.bq-card-active');
+          var bb = document.getElementById('bq-badge');
+          if(bb){ if(remaining.length>0){bb.textContent=remaining.length;bb.style.display='block';}else bb.style.display='none'; }
+        }, 500);
+      }
+      return;
+    }
+
+    // Update timer display
+    if(circleEl){
+      var offset = 163 - (163 * pct / 100);
+      circleEl.setAttribute('stroke-dashoffset', offset);
+      // Color change: green → orange → red
+      var color = rem > 60000 ? 'var(--green)' : rem > 30000 ? 'var(--orange)' : 'var(--red)';
+      circleEl.setAttribute('stroke', color);
+    }
+    if(timeEl){
+      timeEl.textContent = String(tm).padStart(2,'0') + ':' + String(ts).padStart(2,'0');
+      var tcolor = rem > 60000 ? 'var(--green)' : rem > 30000 ? 'var(--orange)' : 'var(--red)';
+      timeEl.style.color = tcolor;
+    }
+  }, 1000);
+}
+
+function listenSQ(){
+  if(sqUnsub)sqUnsub();
+  sqUnsub=db.collection('pollQuestions').where('type','==','score').onSnapshot(function(s){
+    var el=document.getElementById('sqs-list');
+    if(!el)return;
+    if(s.empty){
+      el.innerHTML='<div class="empty"><div class="ei">&#x1F4CA;</div><p>No score questions yet</p></div>';
+      return;
+    }
+    el.innerHTML='';
+    s.forEach(function(d){
+      var q=d.data();
+      var ans=UD&&UD.sqa&&UD.sqa[d.id]!==undefined?UD.sqa[d.id]:undefined;
+      el.innerHTML+=mkSQ(d.id,q,ans);
+    });
+  },function(err){
+    console.warn('[SQ] snapshot error:',err.code);
+  });
+}
+
+function mkBQ(id, q, ans, deadline, expired, totalSecs){
+  totalSecs = totalSecs || 120;
+
+  // ── CASE 1: User answered → show ONLY their own answer card (no other options shown) ──
+  if(ans !== undefined){
+    var myOptText = (q.options||[])[ans] || 'Answer '+ans;
+    var resultHtml = '';
+
+    if(q.settled){
+      // Result known
+      var correct = ans === q.correctOpt;
+      var correctText = (q.options||[])[q.correctOpt] || '';
+      resultHtml = correct
+        ? '<div class="ans-b" style="margin-top:8px">&#x1F389; Bilkul sahi! <b>+5 pts</b> milenge!</div>'
+        : '<div class="ans-b" style="border-color:var(--red);color:var(--red);margin-top:8px">&#x274C; Galat. Sahi jawab: <b>'+correctText+'</b></div>';
+    } else {
+      resultHtml = '<div class="ans-b" style="margin-top:8px">&#x2705; Jawab save ho gaya! Result baad mein aayega.</div>';
+    }
+
+    return '<div class="qc bonus" id="bqc-'+id+'">'
+      +'<span class="qbadge qb-b">&#x2B50; BONUS +5 PTS</span>'
+      +'<div class="qt">'+q.question+'</div>'
+      +'<div style="background:rgba(0,212,255,0.08);border:1.5px solid rgba(0,212,255,0.35);border-radius:9px;padding:10px 14px;margin-top:6px;display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:18px">✅</span>'
+      +'<div><div style="font-size:10px;color:var(--muted);margin-bottom:2px">Aapka jawab:</div>'
+      +'<div style="font-family:Rajdhani,sans-serif;font-size:15px;font-weight:700;color:var(--neon)">'+myOptText+'</div></div>'
+      +'</div>'
+      +resultHtml
+      +'</div>';
+  }
+
+  // ── CASE 2: Expired, user didn't answer → never shown (filtered in listenBQ) ──
+  // (This case shouldn't reach here, but just in case)
+  if(expired) return '';
+
+  // ── CASE 3: Active question, user hasn't answered yet → show full card with timer ──
+  var rem = deadline ? Math.max(0, deadline - new Date()) : totalSecs*1000;
+  var pct = Math.round((rem/(totalSecs*1000))*100);
+  var tm  = Math.floor(rem/60000);
+  var ts  = Math.floor((rem%60000)/1000);
+  var timerColor = rem > 60000 ? 'var(--green)' : rem > 30000 ? 'var(--orange)' : 'var(--red)';
+  var offset = 163 - (163*pct/100);
+
+  var timerHtml = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px">'
+    +'<svg viewBox="0 0 60 60" width="44" height="44" style="flex-shrink:0">'
+    +'<circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>'
+    +'<circle id="bqc-circle-'+id+'" cx="30" cy="30" r="26" fill="none" stroke="'+timerColor+'" stroke-width="5" stroke-dasharray="163" stroke-dashoffset="'+offset+'" stroke-linecap="round" transform="rotate(-90 30 30)" style="transition:stroke-dashoffset 0.9s linear,stroke 0.5s"/>'
+    +'<text x="30" y="35" text-anchor="middle" font-size="13" font-weight="700" fill="'+timerColor+'" font-family="Rajdhani,sans-serif" id="bqc-time-'+id+'">'
+    +String(tm).padStart(2,'0')+':'+String(ts).padStart(2,'0')+'</text>'
+    +'</svg>'
+    +'<div><div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:'+timerColor+'">⏰ Sirf '+tm+'m '+ts+'s bacha!</div>'
+    +'<div style="font-size:10px;color:var(--muted)">Time khatam hone par question hat jaayega</div></div>'
+    +'</div>';
+
+  var opts = (q.options||[]).map(function(o,i){
+    return '<button class="opt bq-card-active" data-qid="'+id+'" data-idx="'+i+'" onclick="bqClick(this)">'+o+'</button>';
+  }).join('');
+
+  return '<div class="qc bonus bq-card-active" id="bqc-'+id+'">'
+    +'<span class="qbadge qb-b">&#x2B50; BONUS +5 PTS &nbsp;·&nbsp; Jaldi Jawab Do!</span>'
+    +'<div class="qt">'+q.question+'</div>'
+    +timerHtml
+    +'<div class="opts">'+opts+'</div>'
+    +'</div>';
+}
+
+window.bqClick=function(btn){
+  var qid=btn.getAttribute('data-qid');
+  var idx=parseInt(btn.getAttribute('data-idx'));
+  ansBQ(qid,idx);
+};
+
+
+function mkSQ(id,q,ans){
+  var maxPts=0;
+  (q.options||[]).forEach(function(o){if((o.pts||5)>maxPts)maxPts=(o.pts||5);});
+  var html='<div class="qc score">';
+  html+='<div style="display:flex;gap:5px;align-items:center;margin-bottom:7px">';
+  html+='<span class="qbadge qb-s">&#127919; SCORE PREDICTION</span>';
+  html+='<span style="background:rgba(255,215,0,0.1);color:var(--gold);font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid rgba(255,215,0,0.25)">Max +'+maxPts+' pts</span>';
+  html+='</div>';
+  html+='<div class="qt">'+q.question+'</div>';
+  html+='<div class="qmeta">&#127951; '+(q.match||'Live')+'&nbsp;&middot;&nbsp;Jo closest = zyada pts!</div>';
+  html+='<div class="opts" id="sq-opts-'+id+'">';
+  (q.options||[]).forEach(function(o,i){
+    var cls='opt';
+    if(ans!==undefined){
+      if(q.settled){if(i===q.correctOpt)cls+=' ok';else if(i===ans)cls+=' no';}
+      else if(i===ans)cls+=' sel';
+    }
+    var pts=o.pts||5;
+    var isExact=o.isExact||false;
+    var disabled=(ans!==undefined||q.settled)?'disabled':'';
+    var badge='';
+    if(q.settled&&i===q.correctOpt){
+      badge='<span style="color:var(--green);font-size:10px;font-weight:700">+'+pts+'pts</span>';
+    }else{
+      var bc=isExact?'rgba(255,215,0,0.15)':'rgba(0,212,255,0.1)';
+      var tc=isExact?'var(--gold)':'var(--neon)';
+      badge='<span style="background:'+bc+';color:'+tc+';font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700">+'+pts+'pts'+(isExact?' &#127919;':'')+'</span>';
+    }
+    html+='<button class="'+cls+'" data-qid="'+id+'" data-idx="'+i+'" data-pts="'+pts+'" onclick="ansSQClick(this)" '+disabled+'><span>'+(o.label||o)+'</span>'+badge+'</button>';
+  });
+  html+='</div>';
+  if(ans!==undefined){
+    if(q.settled){
+      var co=(q.options||[])[q.correctOpt];
+      var cpts=co?co.pts||5:5;
+      var clbl=co?(co.label||co):'--';
+      if(ans===q.correctOpt){
+        html+='<div class="ans-b">&#127881; Sahi! +'+cpts+' pts'+(co&&co.isExact?' (Exact Bonus!)':'')+'</div>';
+      }else{
+        html+='<div class="ans-b" style="border-color:var(--red);color:var(--red)">Wrong. Sahi: '+clbl+'</div>';
+      }
+    }else{
+      html+='<div class="ans-b">&#9989; Save! Result match baad!</div>';
+    }
+  }
+  html+='</div>';
+  return html;
+}
+
+
+function listenChat(){
+  if(chatUnsub)return;
+  var el=document.getElementById('chat-msgs');
+  chatUnsub=db.collection('chats').orderBy('createdAt','asc').limit(50).onSnapshot(function(s){
+    el.innerHTML='<div class="chat-msg admin">👋 Hello! I\'m Smart 11 Support. Ask anything!<div class="cm-time">Smart 11</div></div>';
+    s.forEach(function(d){
+      var m=d.data();
+      var isMe=CU&&m.uid===CU.uid;
+      var isAdmin=m.isAdmin;
+      var t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+      el.innerHTML+='<div class="chat-msg '+(isAdmin?'admin':'user')+'">'
+        +(isAdmin?'🎧 Admin: ':'')+m.text
+        +'<div class="cm-time">'+(isAdmin?'Support · ':m.name+' · ')+t+'</div></div>';
+    });
+    el.scrollTop=el.scrollHeight;
+  });
+}
+
+window._real_sendMsg=async function(){
+  var inp=document.getElementById('chat-inp');
+  var txt=inp.value.trim();
+  if(!txt||!CU)return;
+  inp.value='';
+  try{
+    await db.collection('chats').add({
+      uid:sU(),name:sN(),text:txt,isAdmin:false,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Auto-reply
+    var lower=txt.toLowerCase();var reply='';
+    if(lower.includes('point')&&lower.includes('how'))reply='⭐ Points: Pre-match Q=10pts, Bonus Q=5pts, Live timer=1pt/5min, Score Q=5-20pts';
+    else if(lower.includes('deposit')||lower.includes('add money'))reply='💳 Pay via UPI: rishabhsisodiya1998@ybl (Min ₹500). Enter UTR after payment.';
+    else if(lower.includes('withdraw'))reply='💸 Withdrawals processed within 24h. Min ₹100.';
+    else if(lower.includes('contest')||lower.includes('pool'))reply='🏆 Answer 11 pre-match questions → Pay entry fee → Win prizes!';
+    else if(lower.includes('result')||lower.includes('answer'))reply='📋 All results settled by admin after match ends.';
+    else if(lower.includes('bonus'))reply='🎁 Daily bonus: ₹10/day. Live bonus: +1 pt every 5 min during match!';
+    if(reply){
+      var ct=document.getElementById('chat-typing');
+      if(ct)ct.style.display='block';
+      setTimeout(async function(){
+        if(ct)ct.style.display='none';
+        await db.collection('chats').add({
+          uid:'admin',name:'Admin',text:reply,isAdmin:true,
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      },1200);
+    }
+  }catch(e){console.error('sendMsg',e);}
+};
+
+
+// ============================================================
+// ADMIN PANEL
+// Admin UID stored in Firestore: settings/admin -> {uids:['uid1','uid2']}
+// ============================================================
+
+
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+// goPage defined in admin section above
+
+window._real_goPage=function(pg){
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(function(p){
+    p.classList.remove('on');
+    p.style.display='';
+  });
+  // Remove active from all nav buttons
+  document.querySelectorAll('.bn').forEach(function(b){b.classList.remove('on');});
+  
+  // Show selected page
+  var pEl=document.getElementById('page-'+pg);
+  if(pEl){pEl.classList.add('on');pEl.style.display='block';}
+  
+  // Activate nav button
+  var bEl=document.getElementById('bn-'+pg);
+  if(bEl)bEl.classList.add('on');
+  
+  // Load page data
+  if(pg==='wallet')loadTxns();
+  if(pg==='lb')loadLB('lb-full',20);
+  if(pg==='points')loadPH();
+  if(pg==='mycontests')loadMyContests();
+};
+
+window._real_om=function(id){
+  var el=document.getElementById(id);
+  if(el)el.classList.add('open');
+};
+
+window._real_cm=function(id){
+  var el=document.getElementById(id);
+  if(el)el.classList.remove('open');
+};
+
+document.querySelectorAll('.mov').forEach(function(m){
+  m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});
+});
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+var dp=null;
+
+// Android/Chrome - shows native install prompt
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  dp=e;
+  // Show floating install button
+  var btn=document.getElementById('inst-btn');
+  if(btn)btn.style.display='block';
+  // Show install button in profile too
+  var pw=document.getElementById('profile-install-wrap');
+  if(pw)pw.style.display='block';
+});
+
+// Hide install button after app is installed
+window.addEventListener('appinstalled',function(){
+  var btn=document.getElementById('inst-btn');
+  if(btn)btn.style.display='none';
+  dp=null;
+  toast('🎉 Smart 11 installed successfully!','var(--green)');
+});
+
+// iOS Safari detection - show custom banner
+(function(){
+  var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isInStandalone=('standalone' in navigator)&&navigator.standalone;
+  var dismissed=localStorage.getItem('ios_install_dismissed');
+  if(isIos&&!isInStandalone&&!dismissed){
+    // Show iOS banner after 3 seconds
+    setTimeout(function(){
+      var banner=document.getElementById('ios-install-banner');
+      if(banner)banner.style.display='block';
+    },3000);
+  }
+  // Dismiss permanently if user closes it
+  var closeBtn=document.querySelector('#ios-install-banner .iib-close');
+  if(closeBtn){
+    closeBtn.addEventListener('click',function(){
+      localStorage.setItem('ios_install_dismissed','1');
+    });
+  }
+})();
+
+window._real_installApp=async function(){
+  // iOS - show banner
+  var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIos){
+    var banner=document.getElementById('ios-install-banner');
+    if(banner){banner.style.display='block';return;}
+  }
+  // Android/Chrome - native prompt
+  if(!dp){
+    toast('App already installed or install not available on this browser','var(--orange)');
+    return;
+  }
+  try{
+    dp.prompt();
+    var res=await dp.userChoice;
+    if(res.outcome==='accepted'){
+      var btn=document.getElementById('inst-btn');
+      if(btn)btn.style.display='none';
+      dp=null;
+      toast('🎉 Installing Smart 11...','var(--green)');
+    }
+  }catch(e){
+    toast('Install prompt error: '+e.message,'var(--red)');
+  }
+};
+
+// Policy Modal
+window.showPolicy=function(type){
+  var title=type==='terms'?'📋 Terms & Conditions':'🔒 Privacy Policy';
+  var body='';
+  if(type==='terms'){
+    body='<b style="color:var(--text)">Smart 11 - Terms & Conditions</b><br><br>'
+      +'<b>1. Platform Nature</b><br>Smart 11 ek skill-based cricket prediction platform hai. Yeh gambling nahi hai — aapki cricket knowledge test hoti hai.<br><br>'
+      +'<b>2. Eligibility</b><br>Sirf 18+ users participate kar sakte hain. Aapko apni sahi information deni hogi.<br><br>'
+      +'<b>3. Entry Fee & Prize</b><br>Entry fee non-refundable hai match shuru hone ke baad. Prize pool mein se platform fee deducted hogi.<br><br>'
+      +'<b>4. Results</b><br>Saare results admin dwara settle kiye jayenge match khatam hone ke baad.<br><br>'
+      +'<b>5. Withdrawals</b><br>Min withdrawal ₹100. Processing 24-48 hours mein hogi.<br><br>'
+      +'<b>6. Fair Play</b><br>Multiple accounts, fraud ya cheating par account ban ho sakta hai.<br><br>'
+      +'<b>7. Liability</b><br>Smart 11 match cancellation, technical issues ya internet problems ke liye liable nahi hai.<br><br>'
+      +'<b>Contact:</b> rishabhsisodiya1998@gmail.com';
+  } else {
+    body='<b style="color:var(--text)">Smart 11 - Privacy Policy</b><br><br>'
+      +'<b>Data Collection</b><br>Hum collect karte hain: Name, Email, Phone (optional). Yeh data sirf platform use ke liye hai.<br><br>'
+      +'<b>Data Usage</b><br>Aapka data kisi third party ko nahi becha/diya jayega. Sirf account management aur prize distribution ke liye use hoga.<br><br>'
+      +'<b>Firebase</b><br>Hum Google Firebase use karte hain data store karne ke liye. Google ki privacy policy bhi apply hoti hai.<br><br>'
+      +'<b>Cookies</b><br>Hum localStorage use karte hain aapki preferences save karne ke liye.<br><br>'
+      +'<b>Security</b><br>Aapka data encrypted aur secure hai.<br><br>'
+      +'<b>Contact:</b> rishabhsisodiya1998@gmail.com<br>'
+      +'<b>Address:</b> India';
+  }
+  document.getElementById('policy-title').textContent=title;
+  document.getElementById('policy-body').innerHTML=body;
+  document.getElementById('policy-modal').classList.add('open');
+};
+
+// Drain any queued function calls (stubs -> real functions now ready)
+if(window._drainQ)window._drainQ();
+
+// Failsafe: also drain on DOM ready (in case script loaded after user clicked)
+document.addEventListener('DOMContentLoaded', function(){
+  if(window._drainQ)window._drainQ();
+});
+
+
+
+
+</script>
+<footer style="background:linear-gradient(90deg,#020617,#0f172a); color:#cbd5f5; padding:30px 15px; font-family:Arial, sans-serif;">
+
+  <div style="max-width:1000px; margin:auto; text-align:center;">
+
+    <!-- Logo / Title -->
+    <h2 style="color:#22c55e; margin-bottom:10px;">🏏 SMART 11</h2>
+    <p style="font-size:14px; margin-bottom:20px;">
+      Skill-based Cricket Prediction Contest Platform
+    </p>
+
+    <!-- Links -->
+    <div style="margin-bottom:20px;">
+      <a href="terms.html" style="color:#38bdf8; margin:0 10px; text-decoration:none;">Terms & Conditions</a> | 
+      <a href="privacy.html" style="color:#38bdf8; margin:0 10px; text-decoration:none;">Privacy Policy</a> | 
+      <a href="refund.html" style="color:#38bdf8; margin:0 10px; text-decoration:none;">Refund Policy</a>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="background:#020617; padding:15px; border-radius:10px; font-size:13px; line-height:1.6;">
+      
+      <p>This is a skill-based cricket prediction contest.</p>
+      <p>No betting or gambling is involved.</p>
+      <p>Winners are selected based on correct answers and points scored.</p>
+      <p>This platform is not associated with BCCI, IPL, Facebook or Instagram.</p>
+      <p style="font-weight:bold; margin-top:10px;">Terms & Conditions apply.</p>
+
+    </div>
+
+    <!-- Copyright -->
+    <p style="margin-top:20px; font-size:12px; color:#94a3b8;">
+      © 2026 SMART 11. All rights reserved.
+    </p>
+
+  </div>
+
+</footer>
+</body>
+</html>
